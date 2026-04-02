@@ -1,0 +1,5253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Northpoint — Inteligencia Conductual para Traders</title>
+  <meta name="description" content="Northpoint mide cómo se comportan los traders bajo presión real del mercado. Registra tus operaciones, entiende tu comportamiento, construye tu reputación como trader.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+    :root {
+      --bg:           #0A0A0F;
+      --bg-2:         #0F1018;
+      --bg-card:      #13141C;
+      --bg-card-2:    #191B26;
+      --border:       rgba(255,255,255,0.07);
+      --border-green: rgba(52,211,153,0.25);
+      --green:        #34D399;
+      --green-dim:    rgba(52,211,153,0.12);
+      --green-glow:   rgba(52,211,153,0.06);
+      --blue:         #3B82F6;
+      --blue-dim:     rgba(59,130,246,0.12);
+      --text-1:       #F1F5F9;
+      --text-2:       #94A3B8;
+      --text-3:       #475569;
+      --mono:         'JetBrains Mono', monospace;
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text-1);
+      line-height: 1.6;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ============================================================
+       UTILITIES
+    ============================================================ */
+    .container {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .container--narrow {
+      max-width: 760px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--green);
+      background: var(--green-dim);
+      border: 1px solid var(--border-green);
+      padding: 5px 12px;
+      border-radius: 100px;
+    }
+
+    .tag::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ============================================================
+       SCROLL ANIMATION
+    ============================================================ */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .fade-up.visible { opacity: 1; transform: none; }
+    .fade-up.delay-1 { transition-delay: 0.1s; }
+    .fade-up.delay-2 { transition-delay: 0.2s; }
+    .fade-up.delay-3 { transition-delay: 0.3s; }
+    .fade-up.delay-4 { transition-delay: 0.4s; }
+
+    /* ============================================================
+       NAV
+    ============================================================ */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s, background 0.3s, backdrop-filter 0.3s;
+    }
+
+    nav.scrolled {
+      background: rgba(10,10,15,0.88);
+      border-color: var(--border);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .nav-logo {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-1);
+    }
+
+    .nav-logo span {
+      color: var(--green);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-2);
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text-1); }
+
+    .nav-cta {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--bg);
+      background: var(--green);
+      padding: 8px 18px;
+      border-radius: 8px;
+      transition: opacity 0.2s, transform 0.2s, box-shadow 0.3s;
+      box-shadow: 0 0 12px rgba(52, 211, 153, 0.3);
+    }
+
+    .nav-cta:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 0 20px rgba(52, 211, 153, 0.6);
+    }
+
+    .nav-mobile-btn {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      cursor: pointer;
+      padding: 4px;
+      background: none;
+      border: none;
+    }
+
+    .nav-mobile-btn span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text-1);
+      border-radius: 2px;
+      transition: 0.3s;
+    }
+
+    /* ============================================================
+       1. HERO
+    ============================================================ */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 120px 0 100px;
+    }
+
+    /* Animated background grid */
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(52,211,153,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(52,211,153,0.03) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
+    }
+
+    /* Glow orbs */
+    .hero-glow-1 {
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(52,211,153,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-glow-2 {
+      position: absolute;
+      bottom: 5%;
+      right: 10%;
+      width: 400px;
+      height: 300px;
+      background: radial-gradient(ellipse, rgba(59,130,246,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    .hero-tag {
+      margin-bottom: 32px;
+    }
+
+    .hero h1 {
+      font-size: clamp(40px, 6vw, 76px);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      color: var(--text-1);
+      margin-bottom: 24px;
+    }
+
+    .hero h1 em {
+      font-style: normal;
+      color: var(--green);
+    }
+
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 19px);
+      color: var(--text-2);
+      line-height: 1.65;
+      max-width: 560px;
+      margin: 0 auto 48px;
+    }
+
+    .hero-ctas {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--bg);
+      background: var(--green);
+      padding: 14px 28px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.3s;
+      box-shadow: 0 0 15px rgba(52, 211, 153, 0.25);
+    }
+
+    /* light sweep across primary button */
+    .btn-primary::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+      transform: skewX(-20deg);
+      transition: left 0s;
+    }
+
+    .btn-primary:hover::before {
+      left: 160%;
+      transition: left 0.55s ease;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 40px rgba(52,211,153,0.5), 0 0 30px rgba(52,211,153,0.6), 0 0 0 1px rgba(52,211,153,0.4);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: transparent;
+      border: 1px solid var(--border);
+      padding: 13px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-secondary::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 60%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+      transform: skewX(-20deg);
+    }
+
+    .btn-secondary:hover::before {
+      left: 160%;
+      transition: left 0.55s ease;
+    }
+
+    .btn-secondary:hover {
+      border-color: rgba(255,255,255,0.25);
+      color: var(--text-1);
+      box-shadow: 0 4px 20px rgba(255,255,255,0.04);
+    }
+
+    /* Animated ticker */
+    .hero-ticker {
+      position: relative;
+      margin-top: 80px;
+      overflow: hidden;
+    }
+
+    .hero-ticker::before,
+    .hero-ticker::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 120px;
+      z-index: 2;
+    }
+
+    .hero-ticker::before {
+      left: 0;
+      background: linear-gradient(90deg, var(--bg), transparent);
+    }
+
+    .hero-ticker::after {
+      right: 0;
+      background: linear-gradient(-90deg, var(--bg), transparent);
+    }
+
+    .ticker-track {
+      display: flex;
+      gap: 16px;
+      animation: ticker 30s linear infinite;
+      width: max-content;
+    }
+
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .ticker-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      white-space: nowrap;
+      font-size: 12px;
+      font-family: var(--mono);
+    }
+
+    .ticker-item .label { color: var(--text-3); }
+    .ticker-item .value { color: var(--text-1); font-weight: 500; }
+    .ticker-item .score { color: var(--green); }
+    .ticker-item .score.warn { color: #F59E0B; }
+    .ticker-item .score.bad { color: #F87171; }
+
+    /* ============================================================
+       SECTION SHARED
+    ============================================================ */
+    section {
+      padding: 100px 0;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    .section-header .tag {
+      margin-bottom: 20px;
+    }
+
+    .section-header h2 {
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--text-1);
+      margin-bottom: 16px;
+      line-height: 1.15;
+    }
+
+    .section-header p {
+      font-size: 17px;
+      color: var(--text-2);
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* ============================================================
+       2. PROBLEM MIRROR
+    ============================================================ */
+    .problem {
+      background: var(--bg);
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    .problem-left h2 {
+      font-size: clamp(28px, 3.5vw, 44px);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+
+    .problem-left .lead {
+      font-size: 17px;
+      color: var(--text-2);
+      margin-bottom: 40px;
+      line-height: 1.7;
+    }
+
+    .problem-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .problem-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 15px;
+      color: var(--text-2);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      cursor: default;
+      transition: border-color 0.25s, background 0.25s, color 0.25s, transform 0.2s, box-shadow 0.25s;
+    }
+
+    .problem-list li:hover {
+      border-color: rgba(248,113,113,0.5);
+      background: rgba(248,113,113,0.06);
+      color: var(--text-1);
+      transform: translateX(6px);
+      box-shadow: -3px 0 0 0 #F87171, 0 4px 20px rgba(248,113,113,0.12);
+    }
+
+    .problem-list li::before {
+      content: '↗';
+      font-size: 14px;
+      color: #F87171;
+      flex-shrink: 0;
+    }
+
+    .problem-note {
+      margin-top: 32px;
+      padding: 20px;
+      background: rgba(248,113,113,0.06);
+      border: 1px solid rgba(248,113,113,0.15);
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.6;
+    }
+
+    .problem-note strong {
+      color: #F87171;
+    }
+
+    /* Simulated chart visual */
+    .problem-visual {
+      position: relative;
+    }
+
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+    }
+
+    .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .chart-title {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .chart-badge {
+      font-size: 11px;
+      font-family: var(--mono);
+      background: rgba(248,113,113,0.12);
+      color: #F87171;
+      border: 1px solid rgba(248,113,113,0.2);
+      padding: 3px 10px;
+      border-radius: 100px;
+    }
+
+    .chart-svg {
+      width: 100%;
+      height: 140px;
+    }
+
+    .behavior-events {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .event-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: var(--bg-card-2);
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: var(--mono);
+    }
+
+    .event-row .event-label { color: var(--text-3); }
+    .event-row .event-tag {
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-size: 10px;
+    }
+    .event-row .event-tag.bad {
+      background: rgba(248,113,113,0.12);
+      color: #F87171;
+      border: 1px solid rgba(248,113,113,0.2);
+    }
+    .event-row .event-tag.warn {
+      background: rgba(245,158,11,0.12);
+      color: #F59E0B;
+      border: 1px solid rgba(245,158,11,0.2);
+    }
+
+    /* ============================================================
+       3. BEHAVIORAL INSIGHT
+    ============================================================ */
+    .insight {
+      background: #050810;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* SVG paths layer */
+    .insight-paths {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      will-change: transform;
+      transform: translateZ(0);
+      contain: layout style;
+    }
+
+    .insight-paths svg {
+      width: 100%;
+      height: 100%;
+      transform: translateZ(0);
+    }
+
+    /* opacity-only animation — zero layout/paint cost, GPU composited */
+    .insight-path {
+      will-change: opacity;
+      animation: path-pulse var(--path-dur, 4s) ease-in-out infinite;
+      animation-delay: var(--path-delay, 0s);
+    }
+
+    @keyframes path-pulse {
+      0%, 100% { opacity: var(--path-op-lo, 0.04); }
+      50%       { opacity: var(--path-op-hi, 0.14); }
+    }
+
+    /* Scramble decode animation */
+    .insight-h2-line {
+      display: block;
+      overflow: hidden;
+    }
+
+    .scramble-char {
+      display: inline-block;
+      font-family: var(--mono);
+      transition: color 0.1s;
+    }
+
+    .scramble-char.locked {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    .scramble-char.locked-accent {
+      font-family: inherit;
+      color: var(--green);
+    }
+
+    /* Clip reveal for h2 lines */
+    @keyframes line-reveal {
+      from { clip-path: inset(0 100% 0 0); opacity: 0.4; }
+      to   { clip-path: inset(0 0% 0 0); opacity: 1; }
+    }
+
+    .insight-line-wrap {
+      display: block;
+      overflow: hidden;
+    }
+
+    .insight-line-inner {
+      display: block;
+      transform: translateY(110%);
+      transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .insight-line-inner.visible {
+      transform: translateY(0);
+    }
+
+    .insight-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .insight-inner h2 {
+      font-size: clamp(28px, 4vw, 52px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 32px;
+      color: var(--text-1);
+    }
+
+    .insight-inner h2 em {
+      font-style: normal;
+      color: var(--green);
+    }
+
+    .insight-body {
+      font-size: 18px;
+      color: var(--text-2);
+      line-height: 1.8;
+      margin-bottom: 40px;
+    }
+
+    .insight-pillars {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 48px;
+    }
+
+    .pillar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .pillar:hover {
+      border-color: var(--border-green);
+      transform: translateY(-3px);
+    }
+
+    .pillar-icon {
+      width: 52px;
+      height: 52px;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(52,211,153,0.08);
+      border: 1px solid rgba(52,211,153,0.25);
+      border-radius: 14px;
+      color: #34D399;
+      box-shadow: 0 0 20px rgba(52,211,153,0.18), inset 0 0 10px rgba(52,211,153,0.06);
+    }
+
+    .pillar-icon svg {
+      width: 26px;
+      height: 26px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 6px rgba(52,211,153,0.6));
+    }
+
+    .pillar-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-1);
+      margin-bottom: 6px;
+    }
+
+    .pillar-desc {
+      font-size: 12px;
+      color: var(--text-2);
+      line-height: 1.6;
+    }
+
+    .insight-missing {
+      margin-top: 48px;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 28px;
+      font-size: 15px;
+      color: var(--text-2);
+    }
+
+    .insight-missing .missing-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--green);
+      flex-shrink: 0;
+    }
+
+    .insight-missing .missing-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 5px rgba(52,211,153,0.5));
+    }
+
+    /* ============================================================
+       4. MEET NORTHPOINT
+    ============================================================ */
+    .meet {
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Mouse-tracking spotlight */
+    .meet-spotlight {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(52,211,153,0.07) 0%, transparent 70%);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: opacity 0.3s ease;
+      opacity: 0;
+      z-index: 0;
+    }
+
+    .meet:hover .meet-spotlight { opacity: 1; }
+
+    .meet-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .meet-left .tag {
+      margin-bottom: 20px;
+    }
+
+    .meet-left h2 {
+      font-size: clamp(28px, 3.5vw, 44px);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      margin-bottom: 24px;
+    }
+
+    .meet-left p {
+      font-size: 16px;
+      color: var(--text-2);
+      line-height: 1.75;
+      margin-bottom: 16px;
+    }
+
+    .meet-bullets {
+      list-style: none;
+      margin-top: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .meet-bullets li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text-2);
+    }
+
+    .meet-bullets li::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+
+    /* Dashboard mock */
+    .dash-mock {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .dash-topbar {
+      background: var(--bg-card-2);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dash-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .dash-dot.red   { background: #FF5F57; }
+    .dash-dot.amber { background: #FFBD2E; }
+    .dash-dot.green { background: #28C840; }
+
+    .dash-url {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-3);
+      margin-left: 8px;
+    }
+
+    .dash-body {
+      padding: 24px;
+    }
+
+    .dash-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .dash-row-label {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .dash-score-big {
+      font-size: 48px;
+      font-weight: 700;
+      font-family: var(--mono);
+      color: var(--green);
+      letter-spacing: -0.03em;
+    }
+
+    .dash-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .dash-metric {
+      background: var(--bg-card-2);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .dash-metric-label {
+      font-size: 10px;
+      font-family: var(--mono);
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
+    .dash-metric-value {
+      font-size: 18px;
+      font-weight: 600;
+      font-family: var(--mono);
+      color: var(--text-1);
+    }
+
+    .dash-metric-value.good { color: var(--green); }
+    .dash-metric-value.warn { color: #F59E0B; }
+    .dash-metric-value.bad  { color: #F87171; }
+
+    .dash-bar-row {
+      margin-top: 20px;
+    }
+
+    .dash-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text-3);
+      margin-bottom: 6px;
+    }
+
+    .dash-bar-track {
+      height: 6px;
+      background: var(--bg-card-2);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .dash-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      background: var(--green);
+      transition: width 1s ease;
+    }
+
+    .dash-bar-fill.warn { background: #F59E0B; }
+    .dash-bar-fill.bad  { background: #F87171; }
+
+    /* ============================================================
+       5. HOW IT WORKS
+    ============================================================ */
+    .how {
+      background: var(--bg-2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 64px;
+    }
+
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 28px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    }
+
+    .step-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(52,211,153,0.06) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .step-card:hover {
+      border-color: var(--border-green);
+      transform: translateY(-6px);
+      box-shadow: 0 16px 48px rgba(52,211,153,0.1);
+    }
+
+    .step-card:hover::after { opacity: 1; }
+
+    /* Hidden extra content revealed on hover */
+    .step-extra {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1), opacity 0.3s;
+      opacity: 0;
+    }
+
+    .step-card:hover .step-extra {
+      max-height: 200px;
+      opacity: 1;
+    }
+
+    .step-extra-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--green);
+      font-family: var(--mono);
+      padding-top: 8px;
+    }
+
+    .step-extra-item::before {
+      content: '→';
+      flex-shrink: 0;
+    }
+
+    .step-number {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--green);
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    .step-icon {
+      width: 48px;
+      height: 48px;
+      background: rgba(52,211,153,0.08);
+      border: 1px solid rgba(52,211,153,0.25);
+      border-radius: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      color: #34D399;
+      box-shadow: 0 0 16px rgba(52,211,153,0.15);
+    }
+
+    .step-icon svg {
+      width: 24px;
+      height: 24px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 5px rgba(52,211,153,0.55));
+    }
+
+    .step-card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-1);
+      margin-bottom: 12px;
+    }
+
+    .step-card p {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+
+    .step-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 20px;
+    }
+
+    .step-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-2);
+      background: var(--bg-card-2);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 3px 8px;
+      border-radius: 100px;
+    }
+
+    /* ============================================================
+       6. TRADER REPUTATION LAYER
+    ============================================================ */
+    .reputation {
+      background: var(--bg);
+    }
+
+    /* Trophy badge */
+    .trophy-badge {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 32px;
+    }
+
+    .trophy-icon {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: trophy-float 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 16px rgba(245,158,11,0.5));
+      color: #F59E0B;
+    }
+
+    .trophy-icon svg {
+      width: 52px;
+      height: 52px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    @keyframes trophy-float {
+      0%, 100% { transform: translateY(0px) rotate(-3deg); }
+      50%       { transform: translateY(-10px) rotate(3deg); }
+    }
+
+    .trophy-rank {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: #F59E0B;
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.25);
+      padding: 4px 12px;
+      border-radius: 100px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .trophy-counter {
+      font-family: var(--mono);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-1);
+      letter-spacing: -0.04em;
+      line-height: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .trophy-counter span {
+      font-size: 20px;
+      color: var(--text-2);
+      font-weight: 400;
+    }
+
+    .rep-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+    }
+
+    .rep-right h2 {
+      font-size: clamp(26px, 3.5vw, 42px);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      margin-bottom: 24px;
+    }
+
+    .rep-right p {
+      font-size: 16px;
+      color: var(--text-2);
+      line-height: 1.75;
+      margin-bottom: 20px;
+    }
+
+    .rep-comparison {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 32px;
+    }
+
+    .rep-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 13px;
+    }
+
+    .rep-row .prof { color: var(--text-2); flex: 1; }
+    .rep-row .arrow { color: var(--green); font-size: 16px; }
+    .rep-row .metric { color: var(--green); font-weight: 500; font-family: var(--mono); }
+
+    .rep-missing {
+      margin-top: 20px;
+      padding: 16px;
+      background: rgba(59,130,246,0.06);
+      border: 1px solid rgba(59,130,246,0.15);
+      border-radius: 10px;
+      font-size: 13px;
+      color: var(--text-2);
+    }
+
+    .rep-missing strong { color: var(--blue); }
+
+    /* Comparison cards */
+    .comparison-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .comp-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .comp-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .comp-profession {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+    }
+
+    .comp-platform {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-3);
+      background: var(--bg-card-2);
+      padding: 3px 8px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+    }
+
+    .comp-platform.np {
+      background: var(--green-dim);
+      color: var(--green);
+      border-color: var(--border-green);
+    }
+
+    .comp-bar-track {
+      height: 4px;
+      background: var(--bg-card-2);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .comp-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      background: var(--green);
+    }
+
+    /* ============================================================
+       7. NORTHPOINT SCORE
+    ============================================================ */
+    .score-section {
+      background: var(--bg-2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .score-visual {
+      margin-top: 64px;
+    }
+
+    .score-cards-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .score-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+
+    .score-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(52,211,153,0.12); }
+
+    .score-card:hover .score-ring svg circle:last-child {
+      filter: drop-shadow(0 0 6px currentColor);
+    }
+
+    /* Animated ring draw on load */
+    @keyframes ring-draw {
+      from { stroke-dashoffset: 264; }
+    }
+
+    .score-card.elite circle:last-child  { animation: ring-draw 1.2s ease forwards 0.3s; }
+    .score-card:not(.elite) circle:last-child { animation: ring-draw 1s ease forwards 0.5s; }
+
+    /* Floating glow pulse on elite card */
+    @keyframes elite-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.15); }
+      50%       { box-shadow: 0 0 0 12px rgba(52,211,153,0); }
+    }
+
+    .score-card.elite { animation: elite-pulse 3s ease-in-out infinite; }
+
+    .score-card.elite {
+      border-color: var(--border-green);
+      background: linear-gradient(135deg, var(--bg-card), rgba(52,211,153,0.04));
+    }
+
+    .score-card-name {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+
+    .score-ring {
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 16px;
+      position: relative;
+    }
+
+    .score-ring svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .score-ring-value {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 700;
+      font-family: var(--mono);
+    }
+
+    .score-breakdown {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .sb-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+
+    .sb-label { color: var(--text-3); font-family: var(--mono); }
+    .sb-val   { font-family: var(--mono); font-weight: 500; }
+
+    .factors-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .factor-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 16px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+
+    .factor-card:hover { border-color: var(--border-green); }
+
+    .factor-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(52,211,153,0.07);
+      border: 1px solid rgba(52,211,153,0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      color: #34D399;
+      box-shadow: 0 0 12px rgba(52,211,153,0.12);
+    }
+
+    .factor-icon svg {
+      width: 20px;
+      height: 20px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 4px rgba(52,211,153,0.5));
+    }
+
+    .factor-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-1);
+      margin-bottom: 6px;
+    }
+
+    .factor-desc {
+      font-size: 12px;
+      color: var(--text-2);
+      line-height: 1.55;
+    }
+
+    /* ============================================================
+       8. GLOBAL TRADER RANKING
+    ============================================================ */
+    .ranking {
+      background: var(--bg);
+    }
+
+    /* Globe layout */
+    .ranking-body {
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 48px;
+      align-items: start;
+      margin-top: 64px;
+    }
+
+    .globe-col {
+      position: sticky;
+      top: 88px;
+    }
+
+    .globe-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1/1;
+      max-width: 420px;
+    }
+
+    #globe-canvas {
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      cursor: grab;
+      contain: layout paint size;
+    }
+
+    #globe-canvas:active { cursor: grabbing; }
+
+    /* Radial fade at edges */
+    .globe-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 50%,
+        transparent 45%,
+        var(--bg) 75%);
+      pointer-events: none;
+    }
+
+    .globe-stat {
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .globe-stat-num {
+      font-family: var(--mono);
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: -0.04em;
+    }
+
+    .globe-stat-label {
+      font-size: 12px;
+      color: var(--text-3);
+      font-family: var(--mono);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 1024px) {
+      .ranking-body {
+        grid-template-columns: 1fr;
+      }
+      .globe-col { position: static; }
+      .globe-wrap { max-width: 320px; margin: 0 auto; }
+    }
+
+    .ranking-table {
+      margin-top: 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .table-head {
+      display: grid;
+      grid-template-columns: 48px 1fr repeat(4, 100px) 80px;
+      gap: 8px;
+      padding: 14px 24px;
+      background: var(--bg-card-2);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .table-row {
+      display: grid;
+      grid-template-columns: 48px 1fr repeat(4, 100px) 80px;
+      gap: 8px;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      font-size: 13px;
+      transition: background 0.15s;
+    }
+
+    .table-row:last-child { border-bottom: none; }
+    .table-row:hover { background: var(--bg-card-2); }
+
+    .tr-rank {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-3);
+    }
+
+    .tr-rank.gold   { color: #F59E0B; }
+    .tr-rank.silver { color: #94A3B8; }
+    .tr-rank.bronze { color: #D97706; }
+
+    .tr-trader {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tr-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-3);
+    }
+
+    .tr-name { font-weight: 500; font-size: 14px; }
+    .tr-handle { font-size: 11px; color: var(--text-3); font-family: var(--mono); }
+
+    .tr-val {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text-2);
+    }
+
+    .tr-score {
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .score-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-family: var(--mono);
+      font-weight: 600;
+    }
+
+    .score-pill.elite  { background: var(--green-dim); color: var(--green); border: 1px solid var(--border-green); }
+    .score-pill.good   { background: rgba(59,130,246,0.1); color: var(--blue); border: 1px solid rgba(59,130,246,0.25); }
+    .score-pill.avg    { background: rgba(245,158,11,0.1); color: #F59E0B; border: 1px solid rgba(245,158,11,0.25); }
+    .score-pill.low    { background: rgba(248,113,113,0.1); color: #F87171; border: 1px solid rgba(248,113,113,0.25); }
+
+    .ranking-footer {
+      padding: 20px 24px;
+      background: var(--bg-card-2);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ranking-footer-text {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-3);
+    }
+
+    .ranking-note {
+      margin-top: 32px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-1);
+      font-style: italic;
+    }
+
+    .ranking-note em {
+      font-style: normal;
+      color: var(--green);
+    }
+
+    /* ============================================================
+       9. VISION
+    ============================================================ */
+    .vision {
+      background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg) 100%);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .vision-inner {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .vision-inner h2 {
+      font-size: clamp(28px, 4.5vw, 54px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 32px;
+    }
+
+    .vision-inner h2 em {
+      font-style: normal;
+      background: linear-gradient(135deg, var(--green), #6EE7B7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .vision-body {
+      font-size: 17px;
+      color: var(--text-2);
+      line-height: 1.8;
+    }
+
+    /* ============================================================
+       10. WHY TRADERS FAIL
+    ============================================================ */
+    .why {
+      background: var(--bg);
+    }
+
+    .why-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: start;
+    }
+
+    .why-left h2 {
+      font-size: clamp(26px, 3.5vw, 42px);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      margin-bottom: 24px;
+    }
+
+    .false-solutions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .false-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid rgba(248,113,113,0.15);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 14px;
+      color: var(--text-2);
+      text-decoration: line-through;
+      text-decoration-color: rgba(248,113,113,0.55);
+    }
+
+    .false-item::before {
+      content: '';
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      background-color: #F87171;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'/%3E%3Cline x1='6' y1='6' x2='18' y2='18'/%3E%3C/svg%3E") center/contain no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round'%3E%3Cline x1='18' y1='6' x2='6' y2='18'/%3E%3Cline x1='6' y1='6' x2='18' y2='18'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+
+    .why-truth {
+      margin-top: 32px;
+      padding: 24px;
+      background: rgba(52,211,153,0.06);
+      border: 1px solid rgba(52,211,153,0.3);
+      border-radius: 14px;
+      box-shadow: 0 0 28px rgba(52,211,153,0.07), inset 0 0 16px rgba(52,211,153,0.03);
+    }
+
+    .why-truth p {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--text-1);
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+
+    .why-truth .truth-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: #34D399;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .why-truth .truth-label::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #34D399;
+      box-shadow: 0 0 8px rgba(52,211,153,0.8);
+      display: inline-block;
+    }
+
+    .why-right {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding-top: 8px;
+    }
+
+    .insight-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .insight-card blockquote {
+      font-size: 16px;
+      font-style: italic;
+      color: var(--text-1);
+      line-height: 1.6;
+      border-left: 2px solid var(--green);
+      padding-left: 16px;
+      margin-bottom: 12px;
+    }
+
+    .insight-card .quote-attr {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-2);
+    }
+
+    .why-close {
+      margin-top: 32px;
+      font-size: 17px;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+
+    .why-close strong {
+      color: var(--text-1);
+    }
+
+    /* ============================================================
+       11. PRICING
+    ============================================================ */
+    .pricing {
+      background: var(--bg-2);
+      border-top: 1px solid var(--border);
+    }
+
+    .pricing-tabs {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 48px;
+      margin-bottom: 48px;
+    }
+
+    .pricing-tab {
+      padding: 10px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-2);
+      transition: all 0.2s;
+    }
+
+    .pricing-tab.active {
+      background: var(--green);
+      color: var(--bg);
+      border-color: transparent;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 64px;
+    }
+
+    .pricing-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px 28px;
+      position: relative;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .pricing-card:hover { transform: translateY(-4px); }
+
+    .pricing-card.featured {
+      border-color: var(--border-green);
+      background: linear-gradient(135deg, var(--bg-card), rgba(52,211,153,0.04));
+    }
+
+    .popular-badge {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--green);
+      color: var(--bg);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 14px;
+      border-radius: 100px;
+    }
+
+    .plan-name {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+    }
+
+    .plan-price {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .price-currency {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+
+    .price-amount {
+      font-size: 48px;
+      font-weight: 700;
+      font-family: var(--mono);
+      letter-spacing: -0.04em;
+      color: var(--text-1);
+    }
+
+    .price-period {
+      font-size: 13px;
+      color: var(--text-3);
+    }
+
+    .plan-desc {
+      font-size: 13px;
+      color: var(--text-3);
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+
+    .plan-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .plan-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-2);
+    }
+
+    .plan-features li::before {
+      content: '✓';
+      color: var(--green);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .btn-plan {
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-plan.outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-2);
+    }
+
+    .btn-plan.outline:hover {
+      border-color: rgba(255,255,255,0.2);
+      color: var(--text-1);
+    }
+
+    .btn-plan.fill {
+      background: var(--green);
+      color: var(--bg);
+    }
+
+    .btn-plan.fill:hover {
+      opacity: 0.9;
+      box-shadow: 0 6px 24px rgba(52,211,153,0.3);
+    }
+
+    /* B2B section */
+    .b2b-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 40px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .b2b-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--blue);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      background: var(--blue-dim);
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 100px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(59,130,246,0.25);
+    }
+
+    .b2b-card h3 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+
+    .b2b-card p {
+      font-size: 15px;
+      color: var(--text-2);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .b2b-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .b2b-feat {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-2);
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 100px;
+    }
+
+    .b2b-right { min-width: 200px; text-align: center; }
+
+    .b2b-price-label {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+    }
+
+    .b2b-price-text {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-1);
+      margin-bottom: 20px;
+    }
+
+    .btn-b2b {
+      display: block;
+      width: 100%;
+      padding: 13px 24px;
+      background: var(--blue);
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .btn-b2b:hover { opacity: 0.9; transform: translateY(-2px); }
+
+    /* ============================================================
+       DEV DOCS — TextShimmer Integration
+    ============================================================ */
+    .dev-docs {
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+    }
+
+    .dev-docs-grid {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 64px;
+      align-items: start;
+    }
+
+    .dev-docs-left h2 {
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .dev-docs-left p {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.75;
+      margin-bottom: 20px;
+    }
+
+    .dep-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 24px;
+    }
+
+    .dep-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+
+    .dep-icon {
+      font-size: 14px;
+    }
+
+    .dep-name {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text-1);
+      font-weight: 500;
+    }
+
+    .dep-badge {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 100px;
+      border: 1px solid var(--border-green);
+      color: var(--green);
+      background: var(--green-dim);
+    }
+
+    /* Code blocks */
+    .code-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .code-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      background: var(--bg-card-2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-filename {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-3);
+    }
+
+    .code-filename span {
+      color: var(--green);
+    }
+
+    .code-copy {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-3);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 10px;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .code-copy:hover { color: var(--text-1); border-color: rgba(255,255,255,0.2); }
+    .code-copy.copied { color: var(--green); border-color: var(--border-green); }
+
+    .code-body {
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    .code-body pre {
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--text-2);
+      white-space: pre;
+      tab-size: 2;
+    }
+
+    /* Syntax highlight tokens */
+    .tk-kw    { color: #C084FC; }   /* keyword: import, export, function, return */
+    .tk-fn    { color: #60A5FA; }   /* function names */
+    .tk-str   { color: #86EFAC; }   /* strings */
+    .tk-type  { color: #FCD34D; }   /* types / interfaces */
+    .tk-cm    { color: #475569; }   /* comments */
+    .tk-num   { color: #FB923C; }   /* numbers */
+    .tk-prop  { color: #94A3B8; }   /* props */
+    .tk-tag   { color: #F472B6; }   /* JSX tags */
+    .tk-attr  { color: #7DD3FC; }   /* JSX attributes */
+
+    /* Setup steps */
+    .setup-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .setup-step {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .setup-step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--green-dim);
+      border: 1px solid var(--border-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--green);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .setup-step-text {
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.6;
+    }
+
+    .setup-step-text strong { color: var(--text-1); }
+
+    .inline-code {
+      font-family: var(--mono);
+      font-size: 11px;
+      background: var(--bg-card-2);
+      border: 1px solid var(--border);
+      padding: 1px 6px;
+      border-radius: 4px;
+      color: var(--green);
+    }
+
+    /* Preview card */
+    .shimmer-preview {
+      background: var(--bg-card);
+      border: 1px solid var(--border-green);
+      border-radius: 14px;
+      padding: 32px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .shimmer-preview-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 20px;
+    }
+
+    /* CSS shimmer animation (replaces framer-motion for the static preview) */
+    .shimmer-text {
+      font-family: var(--mono);
+      font-size: 14px;
+      background: linear-gradient(
+        90deg,
+        #71717a 0%,
+        #ffffff 30%,
+        #71717a 60%
+      );
+      background-size: 250% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer-move 2s linear infinite;
+      display: inline-block;
+    }
+
+    .shimmer-text-blue {
+      font-size: 18px;
+      font-weight: 500;
+      background: linear-gradient(
+        90deg,
+        #1d4ed8 0%,
+        #93c5fd 30%,
+        #1d4ed8 60%
+      );
+      background-size: 250% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer-move 1.2s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes shimmer-move {
+      from { background-position: 100% center; }
+      to   { background-position:   0% center; }
+    }
+
+    @media (max-width: 1024px) {
+      .dev-docs-grid { grid-template-columns: 1fr; gap: 40px; }
+    }
+
+    /* ============================================================
+       12. CTA FINAL — TextShimmer
+    ============================================================ */
+
+    /* h2 shimmer: base blanco suave → brillo blanco puro recorre el texto */
+    .shimmer-h2 {
+      background: linear-gradient(
+        90deg,
+        #CBD5E1 calc(50% - var(--spread-h2)),
+        #ffffff,
+        #CBD5E1 calc(50% + var(--spread-h2))
+      );
+      background-size: 250% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      --spread-h2: 140px;
+      animation: shimmer-move 3s linear infinite;
+    }
+
+    /* p shimmer: base gris claro → brillo verde */
+    .shimmer-p {
+      background: linear-gradient(
+        90deg,
+        #94A3B8 calc(50% - var(--spread-p)),
+        #34D399,
+        #94A3B8 calc(50% + var(--spread-p))
+      );
+      background-size: 250% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      --spread-p: 100px;
+      animation: shimmer-move 2.5s linear infinite;
+    }
+
+    @keyframes shimmer-move {
+      from { background-position: 100% center; }
+      to   { background-position:   0% center; }
+    }
+
+    /* Vision section shimmer — white → bright white sweep */
+    .shimmer-vision-1 {
+      background: linear-gradient(
+        90deg,
+        #94A3B8 calc(50% - 150px),
+        #ffffff,
+        #94A3B8 calc(50% + 150px)
+      );
+      background-size: 250% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer-move 4s linear infinite;
+      display: inline;
+    }
+
+    /* em span: gray → green sweep */
+    .shimmer-vision-2 {
+      background: linear-gradient(
+        90deg,
+        #6EE7B7 calc(50% - 180px),
+        #ffffff,
+        #6EE7B7 calc(50% + 180px)
+      );
+      background-size: 250% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer-move 3s linear infinite;
+      display: inline;
+    }
+
+    .cta-final {
+      background: var(--bg);
+      text-align: center;
+      padding: 120px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 400px;
+      background: radial-gradient(ellipse, rgba(52,211,153,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    .cta-inner h2 {
+      font-size: clamp(30px, 5vw, 56px);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+
+    .cta-inner p {
+      font-size: 17px;
+      color: var(--text-2);
+      line-height: 1.7;
+      margin-bottom: 48px;
+    }
+
+    .cta-steps {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    .cta-step {
+      font-size: 13px;
+      color: var(--text-3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .cta-step .dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--text-3);
+    }
+
+    .cta-step:last-child .dot { display: none; }
+
+    .cta-buttons {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* ============================================================
+       LEGAL SECTION
+    ============================================================ */
+    .legal-bar {
+      border-top: 1px solid var(--border);
+      padding: 20px 0;
+      background: var(--bg);
+    }
+
+    .legal-bar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .legal-bar-label {
+      font-size: 12px;
+      color: var(--text-3);
+      font-family: var(--mono);
+    }
+
+    .legal-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-2);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      letter-spacing: 0.04em;
+    }
+
+    .legal-toggle-btn:hover { border-color: rgba(255,255,255,0.18); color: var(--text-1); }
+
+    .legal-toggle-btn .chevron {
+      font-size: 10px;
+      transition: transform 0.3s ease;
+      display: inline-block;
+    }
+
+    .legal-toggle-btn.open .chevron { transform: rotate(180deg); }
+
+    /* Accordion panel */
+    .legal-panel {
+      background: var(--bg-2);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .legal-panel.open { max-height: 9000px; }
+
+    .legal-panel-inner {
+      padding: 48px 0;
+    }
+
+    .legal-docs-grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 40px;
+    }
+
+    /* Sidebar nav */
+    .legal-nav {
+      position: sticky;
+      top: 88px;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .legal-nav-item {
+      font-size: 12px;
+      font-family: var(--mono);
+      color: var(--text-3);
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      border-left: 2px solid transparent;
+    }
+
+    .legal-nav-item:hover { color: var(--text-2); background: var(--bg-card); }
+    .legal-nav-item.active { color: var(--green); border-left-color: var(--green); background: var(--green-dim); }
+
+    /* Doc content */
+    .legal-docs {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .legal-doc {
+      border-bottom: 1px solid var(--border);
+      padding: 32px 0;
+    }
+
+    .legal-doc:first-child { padding-top: 0; }
+    .legal-doc:last-child { border-bottom: none; }
+
+    .legal-doc-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .legal-doc-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-1);
+      letter-spacing: -0.01em;
+    }
+
+    .legal-doc-arrow {
+      font-size: 12px;
+      color: var(--text-3);
+      transition: transform 0.25s ease;
+      flex-shrink: 0;
+    }
+
+    .legal-doc.expanded .legal-doc-arrow { transform: rotate(90deg); }
+
+    .legal-doc-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    .legal-doc.expanded .legal-doc-body { max-height: 3000px; }
+
+    .legal-doc-content {
+      padding-top: 20px;
+      font-size: 13px;
+      color: var(--text-2);
+      line-height: 1.75;
+    }
+
+    .legal-doc-content h3 {
+      font-size: 11px;
+      font-family: var(--mono);
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin: 20px 0 8px;
+    }
+
+    .legal-doc-content h3:first-child { margin-top: 0; }
+
+    .legal-doc-content ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin: 8px 0 12px;
+    }
+
+    .legal-doc-content ul li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      color: var(--text-2);
+    }
+
+    .legal-doc-content ul li::before {
+      content: '—';
+      color: var(--text-3);
+      flex-shrink: 0;
+      font-family: var(--mono);
+      font-size: 11px;
+      margin-top: 2px;
+    }
+
+    .legal-doc-content p { margin-bottom: 10px; }
+    .legal-doc-content p:last-child { margin-bottom: 0; }
+
+    .legal-doc-content .legal-date {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-3);
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .legal-doc-content a {
+      color: var(--green);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    @media (max-width: 768px) {
+      .legal-docs-grid { grid-template-columns: 1fr; }
+      .legal-nav { position: static; flex-direction: row; flex-wrap: wrap; gap: 6px; }
+      .legal-nav-item { font-size: 10px; padding: 5px 10px; }
+    }
+
+    /* ============================================================
+       FOOTER
+    ============================================================ */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0;
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-logo {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-2);
+    }
+
+    .footer-logo span { color: var(--green); }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+
+    .footer-links a {
+      font-size: 12px;
+      color: var(--text-3);
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--text-2); }
+
+    .footer-copy {
+      font-size: 12px;
+      color: var(--text-3);
+      font-family: var(--mono);
+    }
+
+    /* ============================================================
+       ANIMATIONS & HERO ENTRANCES
+    ============================================================ */
+    .fade-up.delay-1 { transition-delay: 0.12s; }
+    .fade-up.delay-2 { transition-delay: 0.24s; }
+    .fade-up.delay-3 { transition-delay: 0.36s; }
+    .fade-up.delay-4 { transition-delay: 0.48s; }
+
+    nav {
+      animation: fade-in 0.6s ease both;
+    }
+
+    .hero-tag,
+    .hero h1,
+    .hero-sub,
+    .hero-ctas,
+    .hero-trust {
+      opacity: 0;
+      animation: slide-up-fade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .hero-tag { animation-delay: 0.08s; }
+    .hero h1 { animation-delay: 0.16s; }
+    .hero-sub { animation-delay: 0.28s; }
+    .hero-ctas { animation-delay: 0.4s; }
+    .hero-trust { animation-delay: 0.52s; }
+
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slide-up-fade {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fade-up,
+      .fade-up.visible,
+      nav,
+      .hero-tag,
+      .hero h1,
+      .hero-sub,
+      .hero-ctas,
+      .hero-trust {
+        animation: none !important;
+        transition: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+      }
+    }
+
+    /* ============================================================
+       IMPROVED BUTTON TAP TARGETS
+    ============================================================ */
+    .nav-cta,
+    .btn-primary,
+    .btn-secondary,
+    .btn-plan,
+    .btn-b2b,
+    .legal-toggle-btn,
+    .nav-mobile-btn {
+      min-height: 48px;
+    }
+
+    .nav-cta,
+    .btn-primary,
+    .btn-secondary,
+    .btn-plan,
+    .btn-b2b,
+    .legal-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.2;
+    }
+
+    .nav-mobile-btn {
+      min-width: 48px;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-plan,
+    .btn-b2b {
+      padding-top: 14px;
+      padding-bottom: 14px;
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 1024px) {
+      .problem-grid,
+      .meet-grid,
+      .rep-grid,
+      .why-grid {
+        grid-template-columns: 1fr;
+        gap: 48px;
+      }
+
+      .problem-visual,
+      .rep-left {
+        order: -1;
+      }
+
+      .insight-pillars { grid-template-columns: repeat(2, 1fr); }
+      .steps-grid { grid-template-columns: 1fr 1fr; }
+      .score-cards-row { grid-template-columns: 1fr; gap: 12px; }
+      .score-cards-row .score-card {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 20px;
+        text-align: left;
+      }
+
+      .score-ring { margin: 0; }
+      .factors-grid { grid-template-columns: repeat(2, 1fr); }
+      .table-head { display: none; }
+      .table-row { grid-template-columns: 40px 1fr auto auto; }
+      .tr-val.hide-md,
+      .table-row > *:nth-child(4),
+      .table-row > *:nth-child(5) {
+        display: none;
+      }
+
+      .pricing-grid { grid-template-columns: 1fr; }
+      .b2b-card { grid-template-columns: 1fr; text-align: center; }
+      .b2b-right { min-width: unset; }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      section { padding: 64px 0; }
+      .hero {
+        min-height: auto;
+        padding: 96px 0 64px;
+      }
+
+      .nav-inner { height: 64px; }
+      .nav-links { display: none; }
+      .nav-mobile-btn { display: flex; }
+
+      .hero-content {
+        max-width: 100%;
+        text-align: left;
+      }
+
+      .hero-tag { margin-bottom: 20px; }
+
+      .hero h1 {
+        font-size: clamp(34px, 9vw, 48px);
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+        margin-bottom: 18px;
+      }
+
+      .hero-sub {
+        font-size: 16px;
+        line-height: 1.65;
+        margin-bottom: 32px;
+        max-width: 100%;
+      }
+
+      .hero-trust,
+      .social-proof-text,
+      .footer-copy,
+      .footer-links a,
+      .nav-links a,
+      .tr-handle,
+      .tag {
+        font-size: 11px;
+      }
+
+      .hero-ctas,
+      .cta-buttons {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        width: 100%;
+      }
+
+      .btn-primary,
+      .btn-secondary,
+      .btn-plan,
+      .btn-b2b {
+        width: 100%;
+        min-height: 48px;
+        font-size: 15px;
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .steps-grid,
+      .pricing-tabs {
+        grid-template-columns: 1fr;
+      }
+
+      .insight-pillars,
+      .factors-grid,
+      .legal-docs-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .score-cards-row .score-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .score-ring { margin: 0 auto; }
+
+      .table-row {
+        grid-template-columns: 32px 1fr auto;
+        gap: 10px;
+        padding: 14px 16px;
+        font-size: 12px;
+      }
+
+      .tr-name { font-size: 13px; }
+      .tr-score { font-size: 14px; }
+
+      .b2b-card { padding: 28px 20px; }
+
+      .footer-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .footer-links {
+        flex-wrap: wrap;
+        gap: 12px 18px;
+      }
+
+      .legal-nav {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .legal-nav-item {
+        font-size: 10px;
+        padding: 6px 10px;
+      }
+    }
+
+    @media (max-width: 320px) {
+      .container {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      section { padding: 52px 0; }
+      .hero { padding: 84px 0 52px; }
+
+      .hero h1 {
+        font-size: 28px;
+        line-height: 1.12;
+        margin-bottom: 16px;
+      }
+
+      .hero-sub {
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 24px;
+      }
+
+      .tag,
+      .hero-trust,
+      .social-proof-text,
+      .footer-copy {
+        font-size: 10px;
+      }
+
+      .btn-primary,
+      .btn-secondary,
+      .btn-plan,
+      .btn-b2b,
+      .nav-cta {
+        min-height: 48px;
+        font-size: 14px;
+        padding-left: 14px;
+        padding-right: 14px;
+        border-radius: 10px;
+      }
+
+      .nav-logo,
+      .footer-logo {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+      }
+
+      .table-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 12px 14px;
+      }
+
+      .tr-rank,
+      .tr-score,
+      .tr-val,
+      .tr-name {
+        font-size: 12px;
+      }
+
+      .score-card,
+      .b2b-card {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+    }
+
+    /* ============================================================
+       JAPANESE CANDLESTICK BACKGROUNDS
+    ============================================================ */
+    .candles-bg {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .problem { position: relative; overflow: hidden; }
+    .reputation { position: relative; overflow: hidden; }
+
+    @keyframes candles-float {
+      0% { transform: translateY(0px); }
+      25% { transform: translateY(-8px); }
+      50% { transform: translateY(-12px); }
+      75% { transform: translateY(-6px); }
+      100% { transform: translateY(0px); }
+    }
+
+    .hero-trust {
+      font-size: 12px;
+      color: var(--text-3);
+      margin-top: 12px;
+      letter-spacing: 0.04em;
+      font-family: var(--mono);
+    }
+
+    .pricing-trust {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-3);
+      margin-top: 16px;
+      font-family: var(--mono);
+      letter-spacing: 0.04em;
+    }
+
+    /* Social Proof Bar */
+    .social-proof-bar {
+      background: var(--green-dim);
+      border-top: 1px solid var(--border-green);
+      border-bottom: 1px solid var(--border-green);
+      padding: 12px 0;
+    }
+    .social-proof-inner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .social-proof-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease infinite;
+      flex-shrink: 0;
+    }
+    .social-proof-text {
+      font-size: 13px;
+      color: var(--text-2);
+      font-family: var(--mono);
+    }
+    .social-proof-text strong {
+      color: var(--green);
+    }
+    .social-proof-sep {
+      color: var(--text-3);
+      font-size: 13px;
+    }
+    @media (max-width: 480px) {
+      .social-proof-sep { display: none; }
+      .social-proof-inner { gap: 8px; }
+    }
+
+    /* MOBILE OPTIMIZATIONS - DEFINITIVE */
+    @media (max-width: 768px) {
+      .nav-inner {
+        height: 60px;
+      }
+
+      .nav-cta {
+        width: auto;
+        min-height: 36px;
+        padding: 6px 11px;
+        font-size: 10px;
+        line-height: 1;
+        border-radius: 999px;
+        letter-spacing: 0.04em;
+        box-shadow:
+          0 0 10px rgba(52, 211, 153, 0.28),
+          0 0 20px rgba(52, 211, 153, 0.18),
+          inset 0 0 10px rgba(255, 255, 255, 0.08);
+      }
+
+      .nav-cta:hover {
+        box-shadow:
+          0 0 14px rgba(52, 211, 153, 0.4),
+          0 0 26px rgba(52, 211, 153, 0.24),
+          inset 0 0 10px rgba(255, 255, 255, 0.12);
+      }
+
+      .hero-content,
+      .section-header,
+      .problem-left,
+      .insight-inner,
+      .meet-left,
+      .rep-right,
+      .vision-inner,
+      .why-left,
+      .why-right,
+      .cta-inner,
+      .pricing-card,
+      .b2b-card,
+      .legal-doc-content {
+        text-align: center;
+      }
+
+      h1, h2, h3, h4,
+      .hero-sub,
+      .lead,
+      .section-header p,
+      .insight-body,
+      .vision-body,
+      .pricing-trust,
+      .hero-trust,
+      .social-proof-text {
+        text-align: center;
+      }
+
+      .hero-content {
+        max-width: 100%;
+      }
+
+      .hero-tag,
+      .section-header .tag,
+      .meet-left .tag,
+      .cta-inner > .tag,
+      .vision-inner > .tag {
+        display: inline-flex;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      .hero-ctas,
+      .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        width: 100%;
+      }
+
+      .btn-primary,
+      .btn-secondary,
+      .btn-plan,
+      .btn-b2b {
+        width: min(100%, 420px);
+        margin-left: auto;
+        margin-right: auto;
+        justify-content: center;
+        text-align: center;
+        border-radius: 14px;
+      }
+
+      .btn-primary,
+      .btn-plan.fill,
+      .btn-b2b {
+        box-shadow:
+          0 0 16px rgba(52, 211, 153, 0.34),
+          0 0 32px rgba(52, 211, 153, 0.18),
+          inset 0 0 16px rgba(255, 255, 255, 0.06);
+      }
+
+      .problem-list,
+      .meet-bullets,
+      .plan-features,
+      .b2b-features,
+      .false-solutions {
+        text-align: left;
+      }
+
+      .step-tags,
+      .cta-steps,
+      .b2b-features,
+      .social-proof-inner,
+      .footer-links,
+      .legal-nav {
+        justify-content: center;
+      }
+
+      .footer-inner,
+      .footer-links {
+        align-items: center;
+        text-align: center;
+      }
+
+      .footer-inner {
+        flex-direction: column;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .nav-inner {
+        height: 56px;
+      }
+
+      .nav-cta {
+        min-height: 32px;
+        padding: 5px 9px;
+        font-size: 9px;
+        box-shadow:
+          0 0 8px rgba(52, 211, 153, 0.26),
+          0 0 16px rgba(52, 211, 153, 0.16);
+      }
+
+      .hero h1 {
+        font-size: clamp(32px, 8.8vw, 42px);
+        text-align: center;
+        word-break: break-word;
+      }
+
+      .hero-sub {
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .btn-primary,
+      .btn-secondary,
+      .btn-plan,
+      .btn-b2b {
+        width: 100%;
+        font-size: 13px;
+        padding: 12px 18px;
+      }
+
+      h2, h3, h4 {
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 320px) {
+      .nav-cta {
+        min-height: 30px;
+        padding: 4px 8px;
+        font-size: 8px;
+      }
+
+      .hero h1 {
+        font-size: 28px;
+      }
+
+      .hero-sub {
+        font-size: 13px;
+      }
+
+      .btn-primary,
+      .btn-secondary,
+      .btn-plan,
+      .btn-b2b {
+        font-size: 12px;
+        padding: 11px 14px;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================
+       NAV
+  ============================================================ -->
+  <nav id="navbar">
+    <div class="container">
+      <div class="nav-inner">
+        <a href="#" class="nav-logo">North<span>point</span></a>
+        <ul class="nav-links">
+          <li><a href="#how">Cómo funciona</a></li>
+          <li><a href="#score">Score</a></li>
+          <li><a href="#ranking">Ranking</a></li>
+          <li><a href="#pricing">Precios</a></li>
+        </ul>
+        <a href="https://northpoint-core.vercel.app/" class="nav-cta" target="_blank" rel="noopener">Empieza Gratis</a>
+        <button class="nav-mobile-btn" aria-label="Menú" id="mobileBtn">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================================================
+       1. HERO
+  ============================================================ -->
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-glow-1"></div>
+    <div class="hero-glow-2"></div>
+    <div class="candles-bg" id="hero-candles"></div>
+
+    <div class="container">
+      <div class="hero-content">
+
+        <div class="hero-tag fade-up">
+          <span class="tag">Plataforma de Inteligencia Conductual</span>
+        </div>
+
+        <h1 class="fade-up delay-1">
+          El trading no es un<br>problema de estrategia.<br>
+          Es un problema <em>conductual</em>.
+        </h1>
+
+        <p class="hero-sub fade-up delay-2">
+          La mayoría de los traders no fallan por falta de conocimiento.<br>
+          Fallan porque pierden el control bajo presión.
+        </p>
+
+        <div class="hero-ctas fade-up delay-3">
+          <a href="https://northpoint-core.vercel.app/" class="btn-primary" target="_blank" rel="noopener">
+            Descubre tu Perfil de Trading
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="#how" class="btn-secondary">
+            Ver cómo funciona
+          </a>
+        </div>
+        <p class="hero-trust fade-up delay-4">Gratis para empezar · Sin tarjeta de crédito · Cancela cuando quieras</p>
+
+        <!-- Animated ticker -->
+        <div class="hero-ticker fade-up delay-4">
+          <div class="ticker-track" id="ticker">
+            <div class="ticker-item"><span class="label">TRADER_A</span><span class="value">Score</span><span class="score">92</span></div>
+            <div class="ticker-item"><span class="label">Disciplina de Riesgo</span><span class="value">Alto</span></div>
+            <div class="ticker-item"><span class="label">TRADER_B</span><span class="value">Score</span><span class="score warn">61</span></div>
+            <div class="ticker-item"><span class="label">Estabilidad Emocional</span><span class="value">Medio</span></div>
+            <div class="ticker-item"><span class="label">TRADER_C</span><span class="value">Score</span><span class="score bad">37</span></div>
+            <div class="ticker-item"><span class="label">Consistencia</span><span class="value">—</span></div>
+            <div class="ticker-item"><span class="label">Calidad de Decisión</span><span class="value">Behavioral AI</span></div>
+            <div class="ticker-item"><span class="label">Ranking Global</span><span class="score">#1,204</span></div>
+            <div class="ticker-item"><span class="label">Revenge Trades</span><span class="score bad">Detectado</span></div>
+            <div class="ticker-item"><span class="label">Win Rate</span><span class="value">58.3%</span></div>
+            <div class="ticker-item"><span class="label">TRADER_A</span><span class="value">Score</span><span class="score">92</span></div>
+            <div class="ticker-item"><span class="label">Disciplina de Riesgo</span><span class="value">Alto</span></div>
+            <div class="ticker-item"><span class="label">TRADER_B</span><span class="value">Score</span><span class="score warn">61</span></div>
+            <div class="ticker-item"><span class="label">Estabilidad Emocional</span><span class="value">Medio</span></div>
+            <div class="ticker-item"><span class="label">TRADER_C</span><span class="value">Score</span><span class="score bad">37</span></div>
+            <div class="ticker-item"><span class="label">Consistencia</span><span class="value">—</span></div>
+            <div class="ticker-item"><span class="label">Calidad de Decisión</span><span class="value">Behavioral AI</span></div>
+            <div class="ticker-item"><span class="label">Ranking Global</span><span class="score">#1,204</span></div>
+            <div class="ticker-item"><span class="label">Revenge Trades</span><span class="score bad">Detectado</span></div>
+            <div class="ticker-item"><span class="label">Win Rate</span><span class="value">58.3%</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============================================================
+       2. PROBLEM MIRROR
+  ============================================================ -->
+  <section class="problem">
+    <div class="candles-bg" id="problem-candles"></div>
+
+    <div class="container">
+      <div class="problem-grid">
+
+        <div class="problem-left fade-up">
+          <h2>Ya has visto esto antes.</h2>
+          <p class="lead">Estos patrones aparecen en el historial de todos los traders. No son aleatorios. Son conductuales.</p>
+
+          <ul class="problem-list">
+            <li>Entrar a posiciones demasiado temprano</li>
+            <li>Cerrar ganancias demasiado rápido</li>
+            <li>Hacer revenge trading después de una pérdida</li>
+            <li>Mantener posiciones perdedoras demasiado tiempo</li>
+            <li>Sobreoperar después de una ganancia</li>
+          </ul>
+
+          <div class="problem-note">
+            <strong>No son errores de estrategia.</strong><br>
+            Son errores conductuales — y ninguna plataforma los mide actualmente.
+          </div>
+        </div>
+
+        <div class="problem-visual fade-up delay-2">
+          <div class="chart-card">
+            <div class="chart-header">
+              <span class="chart-title">Sesión de Trading — 11 de Marzo</span>
+              <span class="chart-badge">3 comportamientos detectados</span>
+            </div>
+
+            <!-- Simple SVG chart -->
+            <svg class="chart-svg" viewBox="0 0 400 140" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#34D399" stop-opacity="0.15"/>
+                  <stop offset="100%" stop-color="#34D399" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <!-- Area fill -->
+              <path d="M0,100 L40,80 L80,60 L120,40 L160,55 L200,90 L240,110 L280,85 L320,60 L360,50 L400,70 L400,140 L0,140 Z" fill="url(#chartGrad)"/>
+              <!-- Line -->
+              <path d="M0,100 L40,80 L80,60 L120,40 L160,55 L200,90 L240,110 L280,85 L320,60 L360,50 L400,70" fill="none" stroke="#34D399" stroke-width="1.5" stroke-linecap="round"/>
+              <!-- Markers -->
+              <circle cx="200" cy="90" r="4" fill="#F87171" stroke="#0F1018" stroke-width="2"/>
+              <circle cx="240" cy="110" r="4" fill="#F87171" stroke="#0F1018" stroke-width="2"/>
+              <circle cx="360" cy="50" r="4" fill="#F59E0B" stroke="#0F1018" stroke-width="2"/>
+            </svg>
+
+            <div class="behavior-events">
+              <div class="event-row">
+                <span class="event-label">09:42 AM — Posición #4</span>
+                <span class="event-tag bad">Revenge trade</span>
+              </div>
+              <div class="event-row">
+                <span class="event-label">10:17 AM — Posición #7</span>
+                <span class="event-tag bad">Riesgo excesivo</span>
+              </div>
+              <div class="event-row">
+                <span class="event-label">11:03 AM — Posición #11</span>
+                <span class="event-tag warn">Salida temprana</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============================================================
+       3. BEHAVIORAL INSIGHT
+  ============================================================ -->
+  <section class="insight" id="insight-section">
+    <!-- Animated background paths (injected by JS) -->
+    <div class="insight-paths" id="insightPaths"></div>
+
+    <div class="container">
+      <div class="insight-inner">
+
+        <h2 id="insight-h2">
+          El mercado no derrota a los traders.<br>
+          <em>Su comportamiento sí.</em>
+        </h2>
+
+        <p class="insight-body fade-up delay-1">
+          La diferencia entre un trader perdedor y uno rentable rara vez es la estrategia.<br>
+          Es disciplina. Gestión de riesgo. Estabilidad emocional. Consistencia.
+        </p>
+
+        <div class="insight-pillars fade-up delay-2">
+          <div class="pillar">
+            <div class="pillar-icon">
+              <!-- Discipline: checkmark path -->
+              <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
+            </div>
+            <div class="pillar-name">Disciplina</div>
+            <div class="pillar-desc">Seguir el plan sin importar la emoción del momento</div>
+          </div>
+          <div class="pillar">
+            <div class="pillar-icon">
+              <!-- Risk control: shield -->
+              <svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5 4 9 8 10 4-1 8-5 8-10V6l-8-4z"/></svg>
+            </div>
+            <div class="pillar-name">Control de Riesgo</div>
+            <div class="pillar-desc">Tamaño de posición consistente y gestión de stops</div>
+          </div>
+          <div class="pillar">
+            <div class="pillar-icon">
+              <!-- Consistency: loop/refresh -->
+              <svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+            </div>
+            <div class="pillar-name">Consistencia</div>
+            <div class="pillar-desc">Proceso repetible en cualquier condición del mercado</div>
+          </div>
+          <div class="pillar">
+            <div class="pillar-icon">
+              <!-- Stability: activity line flat -->
+              <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div class="pillar-name">Estabilidad</div>
+            <div class="pillar-desc">Mantener la calma cuando el mercado va en contra</div>
+          </div>
+        </div>
+
+        <div class="insight-missing fade-up delay-3">
+          <span class="missing-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </span>
+          <span>Pero hay un problema — <strong>ninguna plataforma mide realmente esto.</strong></span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============================================================
+       4. MEET NORTHPOINT
+  ============================================================ -->
+  <section class="meet" id="platform">
+    <div class="meet-spotlight" id="meetSpotlight"></div>
+    <div class="container" style="position:relative;z-index:1">
+      <div class="meet-grid">
+
+        <div class="meet-left fade-up">
+          <span class="tag">Nueva Categoría</span>
+          <h2>Conoce Northpoint.</h2>
+          <p>
+            Northpoint es una plataforma de inteligencia conductual diseñada para entender cómo se comportan los traders bajo presión real del mercado.
+          </p>
+          <p>
+            Sin señales. Sin hype. Sin indicadores.
+          </p>
+          <p style="color: var(--text-1); font-weight: 500;">
+            Solo la verdad sobre tu trading.
+          </p>
+
+          <ul class="meet-bullets">
+            <li>Rastrea y analiza cada decisión de trading</li>
+            <li>Identifica patrones conductuales en tiempo real</li>
+            <li>Construye tu reputación permanente como trader</li>
+            <li>Te compara con la red global de traders</li>
+          </ul>
+        </div>
+
+        <!-- Dashboard mock -->
+        <div class="fade-up delay-2">
+          <div class="dash-mock">
+            <div class="dash-topbar">
+              <div class="dash-dot red"></div>
+              <div class="dash-dot amber"></div>
+              <div class="dash-dot green"></div>
+              <span class="dash-url">app.northpoint.io/dashboard</span>
+            </div>
+            <div class="dash-body">
+              <div class="dash-row">
+                <span class="dash-row-label">Northpoint Score</span>
+                <span style="font-size:11px; font-family:var(--mono); color:var(--green)">↑ +4 esta semana</span>
+              </div>
+              <div class="dash-score-big">84</div>
+
+              <div class="dash-metrics">
+                <div class="dash-metric">
+                  <div class="dash-metric-label">Disciplina de Riesgo</div>
+                  <div class="dash-metric-value good">91%</div>
+                </div>
+                <div class="dash-metric">
+                  <div class="dash-metric-label">Estabilidad Emocional</div>
+                  <div class="dash-metric-value warn">72%</div>
+                </div>
+                <div class="dash-metric">
+                  <div class="dash-metric-label">Consistencia</div>
+                  <div class="dash-metric-value good">88%</div>
+                </div>
+                <div class="dash-metric">
+                  <div class="dash-metric-label">Calidad de Decisión</div>
+                  <div class="dash-metric-value warn">76%</div>
+                </div>
+              </div>
+
+              <div class="dash-bar-row" style="margin-top:20px">
+                <div class="dash-bar-label"><span>Consistencia Conductual</span><span style="color:var(--green)">84/100</span></div>
+                <div class="dash-bar-track"><div class="dash-bar-fill" style="width:84%"></div></div>
+              </div>
+              <div class="dash-bar-row" style="margin-top:12px">
+                <div class="dash-bar-label"><span>Estabilidad Emocional</span><span style="color:#F59E0B">72/100</span></div>
+                <div class="dash-bar-track"><div class="dash-bar-fill warn" style="width:72%"></div></div>
+              </div>
+              <div class="dash-bar-row" style="margin-top:12px">
+                <div class="dash-bar-label"><span>Disciplina de Riesgo</span><span style="color:var(--green)">91/100</span></div>
+                <div class="dash-bar-track"><div class="dash-bar-fill" style="width:91%"></div></div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============================================================
+       5. HOW IT WORKS
+  ============================================================ -->
+  <section class="how" id="how">
+    <div class="container">
+      <div class="section-header fade-up">
+        <span class="tag">Proceso Simple</span>
+        <h2>Cómo funciona Northpoint</h2>
+        <p>Tres pasos para entender al trader detrás de las operaciones.</p>
+      </div>
+
+      <div class="steps-grid">
+
+        <div class="step-card fade-up delay-1">
+          <div class="step-number">Paso 01</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="12" width="4" height="9"/><rect x="10" y="6" width="4" height="15"/><rect x="17" y="2" width="4" height="19"/></svg>
+          </div>
+          <h3>Registra tus operaciones.</h3>
+          <p>Northpoint conecta tu actividad de trading y construye una vista estructurada de cada decisión que tomas en el mercado.</p>
+          <div class="step-tags">
+            <span class="step-tag">Sincronización en tiempo real</span>
+            <span class="step-tag">Multi-broker</span>
+            <span class="step-tag">Importación CSV</span>
+          </div>
+          <div class="step-extra">
+            <div class="step-extra-item">Se conecta en menos de 2 minutos</div>
+            <div class="step-extra-item">Compatible con MT4, MT5, cTrader y más</div>
+            <div class="step-extra-item">Todas las operaciones se registran automáticamente</div>
+          </div>
+        </div>
+
+        <div class="step-card fade-up delay-2">
+          <div class="step-number">Paso 02</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+          </div>
+          <h3>Entiende tu comportamiento.</h3>
+          <p>Northpoint identifica patrones debajo de los números — trading emocional, riesgo inconsistente y decisiones impulsivas que no puedes ver por tu cuenta.</p>
+          <div class="step-tags">
+            <span class="step-tag">Análisis con IA</span>
+            <span class="step-tag">Detección de patrones</span>
+            <span class="step-tag">Mapa conductual</span>
+          </div>
+          <div class="step-extra">
+            <div class="step-extra-item">Detecta patrones de revenge trading</div>
+            <div class="step-extra-item">Mapea ciclos de decisiones emocionales</div>
+            <div class="step-extra-item">Identifica tus puntos ciegos conductuales</div>
+          </div>
+        </div>
+
+        <div class="step-card fade-up delay-3">
+          <div class="step-number">Paso 03</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          </div>
+          <h3>Mejora tu desempeño.</h3>
+          <p>Northpoint te ayuda a entender y mejorar sistemáticamente tu toma de decisiones — no solo tu estrategia, sino tu autoconocimiento como trader.</p>
+          <div class="step-tags">
+            <span class="step-tag">Reportes semanales</span>
+            <span class="step-tag">Northpoint Score</span>
+            <span class="step-tag">Ranking global</span>
+          </div>
+          <div class="step-extra">
+            <div class="step-extra-item">Rastrea la mejora de tu score con el tiempo</div>
+            <div class="step-extra-item">Construye tu reputación verificada como trader</div>
+            <div class="step-extra-item">Escala en el ranking global de traders</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============================================================
+       6. TRADER REPUTATION LAYER
+  ============================================================ -->
+  <section class="reputation">
+    <div class="candles-bg" id="rep-candles"></div>
+    <div class="container">
+      <div class="rep-grid">
+
+        <!-- Visual left -->
+        <div class="comparison-cards fade-up">
+          <div class="comp-card">
+            <div class="comp-card-header">
+              <span class="comp-profession">Desarrolladores de Software</span>
+              <span class="comp-platform">GitHub</span>
+            </div>
+            <div class="comp-bar-track">
+              <div class="comp-bar-fill" style="width:92%; background: var(--blue)"></div>
+            </div>
+            <div style="margin-top:8px; font-size:11px; font-family:var(--mono); color:var(--text-3)">Reputación construida a través de historial verificado de trabajo</div>
+          </div>
+
+          <div class="comp-card">
+            <div class="comp-card-header">
+              <span class="comp-profession">Empresas &amp; Personas</span>
+              <span class="comp-platform">Credit Score</span>
+            </div>
+            <div class="comp-bar-track">
+              <div class="comp-bar-fill" style="width:85%; background: var(--blue)"></div>
+            </div>
+            <div style="margin-top:8px; font-size:11px; font-family:var(--mono); color:var(--text-3)">Comportamiento financiero rastreado entre instituciones</div>
+          </div>
+
+          <div class="comp-card" style="border-color: var(--border-green)">
+            <div class="comp-card-header">
+              <span class="comp-profession">Traders</span>
+              <span class="comp-platform np">Northpoint</span>
+            </div>
+            <div class="comp-bar-track">
+              <div class="comp-bar-fill" style="width:0%; transition: width 1.5s ease" data-target="78" class="comp-bar-fill green-fill"></div>
+            </div>
+            <div style="margin-top:8px; font-size:11px; font-family:var(--mono); color:var(--green)">Inteligencia conductual — ahora es posible</div>
+          </div>
+        </div>
+
+        <!-- Right text -->
+        <div class="rep-right fade-up delay-2">
+          <div class="trophy-badge">
+            <div class="trophy-icon">
+              <svg viewBox="0 0 24 24"><path d="M6 9H2V3h4M18 9h4V3h-4M6 3h12v7a6 6 0 01-12 0V3z"/><path d="M12 16v4M8 20h8"/><path d="M6 10c0 3.31 2.69 6 6 6s6-2.69 6-6"/></svg>
+            </div>
+            <div class="trophy-rank">Top 1% Trader</div>
+            <div class="trophy-counter">#1 <span>/ 12,408</span></div>
+          </div>
+          <h2>El trading necesita un sistema de reputación.</h2>
+          <p>
+            En la mayoría de las profesiones, la reputación importa. Los desarrolladores tienen GitHub. Las empresas tienen credit scores.
+          </p>
+          <p>
+            Pero en el trading no existe una forma confiable de medir la calidad de un trader. Cualquiera puede mostrar ganancias. Muy pocos pueden demostrar disciplina y control de riesgo consistentes.
+          </p>
+
+          <div class="rep-missing">
+            <strong>Hasta ahora.</strong> Northpoint está construyendo la capa de reputación conductual del trading — un registro permanente y verificable de cómo un trader realmente se desempeña.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============================================================
+       7. NORTHPOINT SCORE
+  ============================================================ -->
+  <section class="score-section" id="score">
+    <div class="container">
+      <div class="section-header fade-up">
+        <span class="tag">Feature Principal</span>
+        <h2>El Northpoint Score.</h2>
+        <p>Un score conductual que refleja la verdadera calidad de un trader — no la suerte, no los retornos. El comportamiento.</p>
+      </div>
+
+      <div class="score-visual">
+        <div class="score-cards-row fade-up delay-1">
+
+          <div class="score-card elite">
+            <div class="score-card-name">Trader A — Élite</div>
+            <div class="score-ring">
+              <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#1A2A20" stroke-width="8"/>
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#34D399" stroke-width="8"
+                        stroke-dasharray="264" stroke-dashoffset="29" stroke-linecap="round"/>
+              </svg>
+              <div class="score-ring-value" style="color:var(--green)">92</div>
+            </div>
+            <div class="score-breakdown">
+              <div class="sb-row"><span class="sb-label">Disciplina</span><span class="sb-val" style="color:var(--green)">97</span></div>
+              <div class="sb-row"><span class="sb-label">Estabilidad</span><span class="sb-val" style="color:var(--green)">94</span></div>
+              <div class="sb-row"><span class="sb-label">Consistencia</span><span class="sb-val" style="color:var(--green)">91</span></div>
+              <div class="sb-row"><span class="sb-label">Decisión</span><span class="sb-val" style="color:var(--green)">87</span></div>
+            </div>
+          </div>
+
+          <div class="score-card">
+            <div class="score-card-name">Trader B — En Desarrollo</div>
+            <div class="score-ring">
+              <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#2A2010" stroke-width="8"/>
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#F59E0B" stroke-width="8"
+                        stroke-dasharray="264" stroke-dashoffset="103" stroke-linecap="round"/>
+              </svg>
+              <div class="score-ring-value" style="color:#F59E0B">61</div>
+            </div>
+            <div class="score-breakdown">
+              <div class="sb-row"><span class="sb-label">Disciplina</span><span class="sb-val" style="color:#F59E0B">68</span></div>
+              <div class="sb-row"><span class="sb-label">Estabilidad</span><span class="sb-val" style="color:#F87171">49</span></div>
+              <div class="sb-row"><span class="sb-label">Consistencia</span><span class="sb-val" style="color:#F59E0B">71</span></div>
+              <div class="sb-row"><span class="sb-label">Decisión</span><span class="sb-val" style="color:#F59E0B">58</span></div>
+            </div>
+          </div>
+
+          <div class="score-card">
+            <div class="score-card-name">Trader C — Riesgo Conductual</div>
+            <div class="score-ring">
+              <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#2A1010" stroke-width="8"/>
+                <circle cx="50" cy="50" r="42" fill="none" stroke="#F87171" stroke-width="8"
+                        stroke-dasharray="264" stroke-dashoffset="166" stroke-linecap="round"/>
+              </svg>
+              <div class="score-ring-value" style="color:#F87171">37</div>
+            </div>
+            <div class="score-breakdown">
+              <div class="sb-row"><span class="sb-label">Disciplina</span><span class="sb-val" style="color:#F87171">31</span></div>
+              <div class="sb-row"><span class="sb-label">Estabilidad</span><span class="sb-val" style="color:#F87171">28</span></div>
+              <div class="sb-row"><span class="sb-label">Consistencia</span><span class="sb-val" style="color:#F87171">42</span></div>
+              <div class="sb-row"><span class="sb-label">Decisión</span><span class="sb-val" style="color:#F87171">47</span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="factors-grid fade-up delay-2">
+          <div class="factor-card">
+            <div class="factor-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5 4 9 8 10 4-1 8-5 8-10V6l-8-4z"/></svg>
+            </div>
+            <div class="factor-name">Disciplina de Riesgo</div>
+            <div class="factor-desc">Tamaño consistente, gestión de stops, sin sobreexposición</div>
+          </div>
+          <div class="factor-card">
+            <div class="factor-icon">
+              <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            </div>
+            <div class="factor-name">Estabilidad Emocional</div>
+            <div class="factor-desc">Calma después de pérdidas, sin patrones de revenge trading</div>
+          </div>
+          <div class="factor-card">
+            <div class="factor-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            </div>
+            <div class="factor-name">Calidad de Decisión</div>
+            <div class="factor-desc">Timing de entrada/salida alineado con el plan de trading</div>
+          </div>
+          <div class="factor-card">
+            <div class="factor-icon">
+              <svg viewBox="0 0 24 24"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+            </div>
+            <div class="factor-name">Consistencia en el Tiempo</div>
+            <div class="factor-desc">Comportamiento repetible en distintas semanas y condiciones de mercado</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============================================================
+       8. GLOBAL TRADER RANKING
+  ============================================================ -->
+  <section class="ranking" id="ranking">
+    <div class="container">
+      <div class="section-header fade-up">
+        <span class="tag">Comunidad</span>
+        <h2>El Ranking Global de Traders</h2>
+        <p>A medida que más traders se unen a Northpoint, emerge un sistema transparente para identificar a quienes combinan disciplina, control de riesgo y consistencia. No basado en suerte. Basado en comportamiento.</p>
+      </div>
+
+      <div class="ranking-body">
+
+        <!-- Globe column -->
+        <div class="globe-col fade-up delay-1">
+          <div class="globe-wrap">
+            <canvas id="globe-canvas"></canvas>
+          </div>
+          <div class="globe-stat">
+            <div class="globe-stat-num">12,408</div>
+            <div class="globe-stat-label">traders en todo el mundo</div>
+          </div>
+        </div>
+
+        <!-- Table column -->
+        <div class="fade-up delay-2">
+      <div class="ranking-table">
+        <div class="table-head">
+          <span>#</span>
+          <span>Trader</span>
+          <span>Score</span>
+          <span>Disciplina</span>
+          <span>Estabilidad</span>
+          <span>Consistencia</span>
+          <span>Nivel</span>
+        </div>
+
+        <div class="table-row">
+          <span class="tr-rank gold">01</span>
+          <div class="tr-trader">
+            <div class="tr-avatar">JK</div>
+            <div>
+              <div class="tr-name">J. Kim</div>
+              <div class="tr-handle">@jkim_fx</div>
+            </div>
+          </div>
+          <span class="tr-score" style="color:var(--green)">94</span>
+          <span class="tr-val">98%</span>
+          <span class="tr-val">91%</span>
+          <span class="tr-val">96%</span>
+          <span class="score-pill elite">Elite</span>
+        </div>
+
+        <div class="table-row">
+          <span class="tr-rank silver">02</span>
+          <div class="tr-trader">
+            <div class="tr-avatar">MR</div>
+            <div>
+              <div class="tr-name">M. Reyes</div>
+              <div class="tr-handle">@mreyes_tr</div>
+            </div>
+          </div>
+          <span class="tr-score" style="color:var(--green)">89</span>
+          <span class="tr-val">94%</span>
+          <span class="tr-val">87%</span>
+          <span class="tr-val">89%</span>
+          <span class="score-pill elite">Elite</span>
+        </div>
+
+        <div class="table-row">
+          <span class="tr-rank bronze">03</span>
+          <div class="tr-trader">
+            <div class="tr-avatar">SA</div>
+            <div>
+              <div class="tr-name">S. Ames</div>
+              <div class="tr-handle">@s_ames</div>
+            </div>
+          </div>
+          <span class="tr-score" style="color:var(--green)">85</span>
+          <span class="tr-val">89%</span>
+          <span class="tr-val">82%</span>
+          <span class="tr-val">86%</span>
+          <span class="score-pill good">Pro</span>
+        </div>
+
+        <div class="table-row">
+          <span class="tr-rank">04</span>
+          <div class="tr-trader">
+            <div class="tr-avatar">TN</div>
+            <div>
+              <div class="tr-name">T. Nair</div>
+              <div class="tr-handle">@tnair</div>
+            </div>
+          </div>
+          <span class="tr-score" style="color:#F59E0B">68</span>
+          <span class="tr-val">72%</span>
+          <span class="tr-val">64%</span>
+          <span class="tr-val">70%</span>
+          <span class="score-pill avg">Activo</span>
+        </div>
+
+        <div class="table-row">
+          <span class="tr-rank">05</span>
+          <div class="tr-trader">
+            <div class="tr-avatar">PL</div>
+            <div>
+              <div class="tr-name">P. Luca</div>
+              <div class="tr-handle">@pluca_fx</div>
+            </div>
+          </div>
+          <span class="tr-score" style="color:#F87171">41</span>
+          <span class="tr-val">38%</span>
+          <span class="tr-val">45%</span>
+          <span class="tr-val">41%</span>
+          <span class="score-pill low">En Desarrollo</span>
+        </div>
+
+        <div class="ranking-footer">
+          <span class="ranking-footer-text">Mostrando 5 de 12,408 traders en todo el mundo</span>
+          <span class="ranking-footer-text" style="color:var(--green)">↑ Actualizado en tiempo real</span>
+        </div>
+      </div>
+
+      </div><!-- /ranking-table -->
+        </div><!-- /table column -->
+
+      </div><!-- /ranking-body -->
+
+      <p class="ranking-note fade-up delay-2">
+        No todos los traders son iguales. <em>Northpoint revela la diferencia.</em>
+      </p>
+
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============================================================
+       9. VISION
+  ============================================================ -->
+  <section class="vision">
+    <div class="container">
+      <div class="vision-inner fade-up">
+        <span class="tag" style="margin-bottom:28px;display:inline-flex">Nuestra Misión</span>
+        <h2>
+          <span class="shimmer-vision-1">El futuro del trading</span><br>
+          es <em><span class="shimmer-vision-2">la inteligencia conductual.</span></em>
+        </h2>
+        <p class="vision-body">
+          Los mercados ya tienen gráficas. Ya tienen indicadores.<br>
+          Lo que les falta es una forma de entender al trader detrás de las operaciones.<br><br>
+          Northpoint está construyendo la capa de reputación del trading.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============================================================
+       10. WHY MOST TRADERS NEVER BECOME CONSISTENT
+  ============================================================ -->
+  <section class="why">
+    <div class="container">
+      <div class="why-grid">
+
+        <div class="why-left fade-up">
+          <h2>Por qué la mayoría de los traders nunca se vuelven consistentes</h2>
+
+          <p style="font-size:16px; color:var(--text-2); margin-bottom:28px; line-height:1.7">
+            La mayoría de los traders cree que la solución está afuera. Pero siguen buscando en el lugar equivocado.
+          </p>
+
+          <div class="false-solutions">
+            <div class="false-item">Una mejor estrategia</div>
+            <div class="false-item">Un nuevo indicador</div>
+            <div class="false-item">Otro curso</div>
+            <div class="false-item">Más conocimiento del mercado</div>
+          </div>
+
+          <div class="why-truth">
+            <div class="truth-label">El problema real</div>
+            <p>La estrategia no era el problema. El comportamiento sí.</p>
+            <p style="font-size:14px; color:var(--text-2); font-weight:400">La mayoría de los traders analiza mercados. Pero nunca se analiza a sí mismo. Northpoint cambia eso.</p>
+          </div>
+        </div>
+
+        <div class="why-right fade-up delay-2">
+          <div class="insight-card">
+            <blockquote>
+              "La diferencia entre un trader amateur y uno profesional es el autoconocimiento."
+            </blockquote>
+            <span class="quote-attr">— Northpoint Research, 2026</span>
+          </div>
+
+          <div class="why-close">
+            <strong>Puedes tener la mejor estrategia del mundo</strong> y aun así quebrar tu cuenta si no puedes ejecutarla bajo presión.<br><br>
+            Los traders que ganan a largo plazo no son necesariamente más inteligentes. Se conocen mejor a sí mismos.
+          </div>
+
+          <div style="margin-top:24px; padding:24px; background:rgba(52,211,153,0.04); border:1px solid rgba(52,211,153,0.22); border-radius:14px; box-shadow:0 0 24px rgba(52,211,153,0.06)">
+            <div style="font-size:11px; font-family:var(--mono); color:var(--green); text-transform:uppercase; letter-spacing:0.12em; margin-bottom:16px; display:flex; align-items:center; gap:6px;">
+              <span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block;box-shadow:0 0 6px rgba(52,211,153,0.7)"></span>
+              Northpoint resuelve
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:var(--text-1)">
+                <span style="width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(52,211,153,0.12);border-radius:6px;color:#34D399">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                Rastreo de patrones conductuales
+              </div>
+              <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:var(--text-1)">
+                <span style="width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(52,211,153,0.12);border-radius:6px;color:#34D399">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                Análisis de decisiones emocionales
+              </div>
+              <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:var(--text-1)">
+                <span style="width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(52,211,153,0.12);border-radius:6px;color:#34D399">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                Medición de disciplina de riesgo
+              </div>
+              <div style="display:flex; align-items:center; gap:10px; font-size:14px; color:var(--text-1)">
+                <span style="width:20px;height:20px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(52,211,153,0.12);border-radius:6px;color:#34D399">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </span>
+                Score de consistencia a largo plazo
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ============================================================
+       SOCIAL PROOF BANNER
+  ============================================================ -->
+  <div class="social-proof-bar">
+    <div class="container">
+      <div class="social-proof-inner">
+        <span class="social-proof-dot"></span>
+        <span class="social-proof-text">Únete a más de <strong>2,400</strong> traders que ya rastrean su ventaja conductual</span>
+        <span class="social-proof-sep">·</span>
+        <span class="social-proof-text"><strong>Precio Beta</strong> — termina pronto</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       11. PRICING
+  ============================================================ -->
+  <section class="pricing" id="pricing">
+    <div class="container">
+      <div class="section-header fade-up">
+        <span class="tag">Precios simples</span>
+        <h2>Elige tu acceso a Northpoint</h2>
+        <p>Northpoint está diseñado tanto para traders individuales como para instituciones.</p>
+      </div>
+
+      <!-- B2C Plans -->
+      <div class="pricing-grid fade-up delay-1">
+
+        <div class="pricing-card">
+          <div class="plan-name">Core</div>
+          <div class="plan-price">
+            <span class="price-currency">$</span>
+            <span class="price-amount">20</span>
+            <span class="price-period">/ mes</span>
+          </div>
+          <p class="plan-desc">Todo lo que necesitas para empezar a rastrear tu ventaja conductual.</p>
+          <ul class="plan-features">
+            <li>Registro y diario de operaciones</li>
+            <li>Dashboard de insights conductuales</li>
+            <li>Resumen de desempeño</li>
+            <li>Reporte conductual mensual</li>
+          </ul>
+          <a href="https://northpoint-core.vercel.app/" class="btn-plan outline" target="_blank" rel="noopener">Empieza Gratis</a>
+        </div>
+
+        <div class="pricing-card featured">
+          <div class="popular-badge">Más Popular</div>
+          <div class="plan-name">Pro</div>
+          <div class="plan-price">
+            <span class="price-currency">$</span>
+            <span class="price-amount">49</span>
+            <span class="price-period">/ mes</span>
+          </div>
+          <p class="plan-desc">Análisis conductual profundo para traders serios que quieren subir de nivel.</p>
+          <ul class="plan-features">
+            <li>Todo lo de Core</li>
+            <li>Análisis conductual avanzado</li>
+            <li>Detección de patrones emocionales</li>
+            <li>Desglose de desempeño por sesión</li>
+            <li>Reporte semanal con IA</li>
+          </ul>
+          <a href="https://northpoint-core.vercel.app/" class="btn-plan fill" target="_blank" rel="noopener">Prueba Gratis</a>
+        </div>
+
+        <div class="pricing-card">
+          <div class="plan-name">Elite</div>
+          <div class="plan-price">
+            <span class="price-currency">$</span>
+            <span class="price-amount">99</span>
+            <span class="price-period">/ mes</span>
+          </div>
+          <p class="plan-desc">Reputación conductual completa para traders que quieren destacar.</p>
+          <ul class="plan-features">
+            <li>Todo lo de Pro</li>
+            <li>Northpoint Score (verificado)</li>
+            <li>Perfil de reputación conductual</li>
+            <li>Acceso al Ranking Global de Traders</li>
+            <li>Perfil público de trading y badge</li>
+            <li>Soporte prioritario</li>
+          </ul>
+          <a href="https://northpoint-core.vercel.app/" class="btn-plan outline" target="_blank" rel="noopener">Construye tu Reputación</a>
+        </div>
+
+      </div>
+      <p class="pricing-trust fade-up delay-2">14 días gratis en todos los planes · Sin tarjeta de crédito · Cancela cuando quieras</p>
+
+      <!-- B2B -->
+      <div class="b2b-card fade-up delay-2">
+        <div>
+          <span class="b2b-label">Para Instituciones</span>
+          <h3>Northpoint para Empresas</h3>
+          <p>
+            Prop firms, brokers y fondos usan Northpoint para evaluar, monitorear y desarrollar talento de trading con datos conductuales objetivos.
+          </p>
+          <div class="b2b-features">
+            <span class="b2b-feat">Analytics conductuales de traders</span>
+            <span class="b2b-feat">Monitoreo de riesgo</span>
+            <span class="b2b-feat">Inteligencia de desempeño</span>
+            <span class="b2b-feat">Integración con prop firms</span>
+            <span class="b2b-feat">Reportes personalizados</span>
+          </div>
+        </div>
+        <div class="b2b-right">
+          <div class="b2b-price-label">Precio</div>
+          <div class="b2b-price-text">Personalizado</div>
+          <button class="btn-b2b">Contactar Ventas</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ============================================================
+       12. CTA FINAL
+  ============================================================ -->
+  <section class="cta-final">
+    <div class="cta-glow"></div>
+    <canvas id="cta-candles-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0.22"></canvas>
+    <div class="container">
+      <div class="cta-inner">
+        <span class="tag" style="margin-bottom:24px;display:inline-flex">Empieza Hoy</span>
+        <h2 class="fade-up shimmer-h2">Empieza a entender<br>tu trading hoy.</h2>
+        <p class="fade-up delay-1 shimmer-p">
+          Registra tus operaciones. Analiza tu comportamiento.<br>
+          Construye tu reputación como trader.
+        </p>
+
+        <div class="cta-steps fade-up delay-2">
+          <span class="cta-step">Registra operaciones <div class="dot"></div></span>
+          <span class="cta-step">Analiza tu comportamiento <div class="dot"></div></span>
+          <span class="cta-step">Construye tu reputación</span>
+        </div>
+
+        <div class="cta-buttons fade-up delay-3">
+          <a href="https://northpoint-core.vercel.app/" class="btn-primary" style="font-size:16px; padding:16px 32px" target="_blank" rel="noopener">
+            Empieza Gratis — Obtén tu Score
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a href="https://northpoint-core.vercel.app/" class="btn-secondary" target="_blank" rel="noopener">
+            Únete al Acceso Anticipado — Es Gratis
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       LEGAL SECTION
+  ============================================================ -->
+  <div class="legal-bar">
+    <div class="container">
+      <div class="legal-bar-inner">
+        <span class="legal-bar-label">Documentación Legal</span>
+        <button class="legal-toggle-btn" id="legalToggle" aria-expanded="false">
+          Legal <span class="chevron">▼</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="legal-panel" id="legalPanel" aria-hidden="true">
+    <div class="legal-panel-inner">
+      <div class="container">
+        <div class="legal-docs-grid">
+
+          <!-- Sidebar nav -->
+          <ul class="legal-nav" id="legalNav">
+            <li class="legal-nav-item active" data-target="doc-1">Política de Privacidad</li>
+            <li class="legal-nav-item" data-target="doc-2">Términos de Servicio</li>
+            <li class="legal-nav-item" data-target="doc-3">Política de Uso de Datos</li>
+            <li class="legal-nav-item" data-target="doc-4">Aviso Financiero</li>
+            <li class="legal-nav-item" data-target="doc-5">Propiedad del Algoritmo</li>
+            <li class="legal-nav-item" data-target="doc-6">Política de Red de Datos</li>
+            <li class="legal-nav-item" data-target="doc-7">Licencia de Datos del Trader</li>
+          </ul>
+
+          <!-- Documents -->
+          <div class="legal-docs">
+
+            <!-- 1. Privacy Policy -->
+            <div class="legal-doc expanded" id="doc-1">
+              <div class="legal-doc-header">
+                <span class="legal-doc-title">Política de Privacidad</span>
+                <span class="legal-doc-arrow">›</span>
+              </div>
+              <div class="legal-doc-body">
+                <div class="legal-doc-content">
+                  <span class="legal-date">Última actualización: Marzo 2026</span>
+                  <p>Northpoint respeta la privacidad de sus usuarios y se compromete a proteger la información personal recopilada a través de la plataforma.</p>
+                  <p>Esta Política de Privacidad explica cómo Northpoint recopila, utiliza, almacena y protege los datos de los usuarios al acceder o utilizar la plataforma.</p>
+                  <h3>1. Información que Recopilamos</h3>
+                  <p>Northpoint puede recopilar diferentes tipos de información, incluyendo:</p>
+                  <p><strong style="color:var(--text-1); font-size:12px">Información Personal</strong></p>
+                  <ul>
+                    <li>Nombre</li>
+                    <li>Correo electrónico</li>
+                    <li>País de residencia</li>
+                  </ul>
+                  <p><strong style="color:var(--text-1); font-size:12px">Información Técnica</strong></p>
+                  <ul>
+                    <li>Dirección IP</li>
+                    <li>Información del dispositivo</li>
+                    <li>Tipo de navegador</li>
+                    <li>Registros de actividad en la plataforma</li>
+                  </ul>
+                  <p><strong style="color:var(--text-1); font-size:12px">Datos de Trading</strong></p>
+                  <p>Si el usuario conecta cuentas de trading o sube información de operaciones, Northpoint puede procesar datos como:</p>
+                  <ul>
+                    <li>Historial de operaciones</li>
+                    <li>Métricas de desempeño</li>
+                    <li>Comportamiento de ejecución</li>
+                    <li>Patrones de gestión de riesgo</li>
+                  </ul>
+                  <h3>2. Cómo Usamos la Información</h3>
+                  <p>Northpoint utiliza los datos recopilados para:</p>
+                  <ul>
+                    <li>Operar y mantener la plataforma</li>
+                    <li>Proveer analytics conductuales</li>
+                    <li>Generar métricas de desempeño</li>
+                    <li>Mejorar la funcionalidad de la plataforma</li>
+                    <li>Desarrollar modelos analíticos</li>
+                  </ul>
+                  <h3>3. Protección de Datos</h3>
+                  <p>Northpoint implementa medidas técnicas y organizacionales para proteger los datos contra acceso no autorizado, mal uso o pérdida.</p>
+                  <h3>4. Derechos del Usuario</h3>
+                  <p>Los usuarios pueden solicitar acceso a sus datos, corrección de información o eliminación de su cuenta. Las solicitudes pueden enviarse a través de la información de contacto indicada a continuación.</p>
+                  <h3>5. Contacto</h3>
+                  <p>Para preguntas relacionadas con privacidad: <a href="mailto:privacy@northpoint.com">privacy@northpoint.com</a></p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Terms of Service -->
+            <div class="legal-doc" id="doc-2">
+              <div class="legal-doc-header">
+                <span class="legal-doc-title">Términos de Servicio</span>
+                <span class="legal-doc-arrow">›</span>
+              </div>
+              <div class="legal-doc-body">
+                <div class="legal-doc-content">
+                  <span class="legal-date">Última actualización: Marzo 2026</span>
+                  <p>Al acceder o utilizar la plataforma Northpoint, los usuarios aceptan cumplir con estos Términos de Servicio.</p>
+                  <h3>1. Naturaleza de la Plataforma</h3>
+                  <p>Northpoint es una plataforma tecnológica que proporciona herramientas de análisis conductual relacionadas con el desempeño de trading. Northpoint no provee asesoría financiera, servicios de corretaje ni recomendaciones de inversión.</p>
+                  <h3>2. Uso Aceptable</h3>
+                  <p>Los usuarios se comprometen a no:</p>
+                  <ul>
+                    <li>Hacer mal uso de la plataforma</li>
+                    <li>Interferir con la funcionalidad del sistema</li>
+                    <li>Intentar acceder a áreas restringidas</li>
+                    <li>Usar la plataforma para desarrollar productos competidores</li>
+                  </ul>
+                  <h3>3. Responsabilidad de la Cuenta</h3>
+                  <p>Los usuarios son responsables de mantener la seguridad de las credenciales de su cuenta.</p>
+                  <h3>4. Suspensión</h3>
+                  <p>Northpoint se reserva el derecho de suspender cuentas en casos de violación de los términos, abuso de la plataforma o sospecha de manipulación del sistema.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Data Usage Policy -->
+            <div class="legal-doc" id="doc-3">
+              <div class="legal-doc-header">
+                <span class="legal-doc-title">Política de Uso de Datos</span>
+                <span class="legal-doc-arrow">›</span>
+              </div>
+              <div class="legal-doc-body">
+                <div class="legal-doc-content">
+                  <p>Northpoint analiza la actividad de los usuarios para generar insights conductuales y analytics de desempeño.</p>
+                  <p>Al usar la plataforma, los usuarios dan su consentimiento para el procesamiento de sus datos con los siguientes fines:</p>
+                  <ul>
+                    <li>Análisis conductual</li>
+                    <li>Métricas de desempeño</li>
+                    <li>Mejora de los algoritmos de la plataforma</li>
+                  </ul>
+                  <p>Northpoint puede generar conjuntos de datos agregados y anonimizados derivados de la actividad de los usuarios. Estos datos pueden ser utilizados para análisis estadístico, desarrollo de productos e investigación.</p>
+                  <p>No se compartirá información de identificación personal sin el consentimiento del usuario.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. Financial Disclaimer -->
+            <div class="legal-doc" id="doc-4">
+              <div class="legal-doc-header">
+                <span class="legal-doc-title">Aviso Financiero</span>
+                <span class="legal-doc-arrow">›</span>
+              </div>
+              <div class="legal-doc-body">
+                <div class="legal-doc-content">
+                  <p>Northpoint es una plataforma tecnológica diseñada para fines analíticos.</p>
+                  <p>La plataforma no proporciona:</p>
+                  <ul>
+                    <li>Asesoría financiera</li>
+                    <li>Recomendaciones de inversión</li>
+                    <li>Servicios de corretaje</li>
+                    <li>Gestión de activos</li>
+                  </ul>
+                  <p>El trading en mercados financieros implica un riesgo significativo y puede resultar en pérdidas financieras. Los usuarios son los únicos responsables de sus decisiones de trading. Northpoint no garantiza rentabilidad ni éxito en el trading.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. Algorithm Ownership -->
+            <div class="legal-doc" id="doc-5">
+              <div class="legal-doc-header">
+                <span class="legal-doc-title">Propiedad del Algoritmo</span>
+                <span class="legal-doc-arrow">›</span>
+              </div>
+              <div class="legal-doc-body">
+                <div class="legal-doc-content">
+                  <p>Todos los modelos analíticos, algoritmos, sistemas de scoring y herramientas de análisis conductual desarrollados por Northpoint son propiedad intelectual exclusiva de Northpoint.</p>
+                  <p>Esto incluye, pero no se limita a:</p>
+                  <ul>
+                    <li>Northpoint Score</li>
+                    <li>Sistemas de análisis conductual</li>
+                    <li>Modelos de evaluación de desempeño</li>
+                    <li>Frameworks de analytics de trading</li>
+                  </ul>
+                  <p>Está prohibido que los usuarios apliquen ingeniería inversa a la plataforma, repliquen modelos analíticos o extraigan lógica algorítmica del sistema. Los intentos no autorizados pueden resultar en la terminación de la cuenta.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 6. Data Network Policy -->
+            <div class="legal-doc" id="doc-6">
+              <div class="legal-doc-header">
+                <span class="legal-doc-title">Política de Red de Datos</span>
+                <span class="legal-doc-arrow">›</span>
+              </div>
+              <div class="legal-doc-body">
+                <div class="legal-doc-content">
+                  <p>Northpoint opera como una plataforma de inteligencia conductual que aprende de la actividad agregada de los usuarios.</p>
+                  <p>Al usar la plataforma, los usuarios reconocen que su actividad contribuye a un conjunto de datos conductuales colectivo que mejora las capacidades analíticas de la plataforma.</p>
+                  <p>Northpoint puede utilizar datos agregados y anonimizados para:</p>
+                  <ul>
+                    <li>Mejorar modelos analíticos</li>
+                    <li>Enriquecer los insights conductuales</li>
+                    <li>Desarrollar nuevas herramientas analíticas</li>
+                  </ul>
+                  <p>Las identidades individuales de los usuarios no serán divulgadas a través de estos procesos.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- 7. Trader Data License -->
+            <div class="legal-doc" id="doc-7">
+              <div class="legal-doc-header">
+                <span class="legal-doc-title">Licencia de Datos del Trader</span>
+                <span class="legal-doc-arrow">›</span>
+              </div>
+              <div class="legal-doc-body">
+                <div class="legal-doc-content">
+                  <p>Los usuarios conservan la propiedad de sus datos personales de trading.</p>
+                  <p>Sin embargo, al usar la plataforma Northpoint, los usuarios otorgan a Northpoint una licencia para procesar y analizar dichos datos con el fin de:</p>
+                  <ul>
+                    <li>Generar analytics conductuales</li>
+                    <li>Producir métricas de desempeño</li>
+                    <li>Desarrollar algoritmos de la plataforma</li>
+                  </ul>
+                  <p>Northpoint puede generar insights derivados y analytics agregados basados en estos datos. Dichos insights derivados y modelos analíticos son propiedad intelectual de Northpoint.</p>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /legal-docs -->
+        </div><!-- /legal-docs-grid -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <span class="footer-logo">North<span>point</span></span>
+        <ul class="footer-links">
+          <li><a href="#">Privacidad</a></li>
+          <li><a href="#">Términos</a></li>
+          <li><a href="#">Contacto</a></li>
+          <li><a href="#">Blog</a></li>
+        </ul>
+        <span class="footer-copy">© 2026 Northpoint. Todos los derechos reservados.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+       JAVASCRIPT
+  ============================================================ -->
+  <script>
+    // Navbar scroll effect
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 20);
+    }, { passive: true });
+
+    // Scroll animation observer
+    const animEls = document.querySelectorAll('.fade-up');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+    animEls.forEach(el => observer.observe(el));
+
+    // Animate Northpoint reputation bar when visible
+    const greenFill = document.querySelector('.green-fill');
+    if (greenFill) {
+      const repObserver = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            greenFill.style.width = '78%';
+            repObserver.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.5 });
+      repObserver.observe(greenFill);
+    }
+
+    // Copy code buttons
+    function copyCode(btn, sourceId) {
+      const pre = document.getElementById(sourceId);
+      const text = pre ? pre.innerText : '';
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '¡Copiado!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+    window.copyCode = copyCode;
+
+    // Legal accordion
+    (function () {
+      const toggle = document.getElementById('legalToggle');
+      const panel  = document.getElementById('legalPanel');
+      const docs   = document.querySelectorAll('.legal-doc');
+      const navItems = document.querySelectorAll('.legal-nav-item');
+
+      // Toggle main panel
+      toggle.addEventListener('click', () => {
+        const isOpen = panel.classList.toggle('open');
+        toggle.classList.toggle('open', isOpen);
+        toggle.setAttribute('aria-expanded', isOpen);
+        panel.setAttribute('aria-hidden', !isOpen);
+      });
+
+      // Individual doc accordion
+      docs.forEach(doc => {
+        const header = doc.querySelector('.legal-doc-header');
+        header.addEventListener('click', () => {
+          const wasExpanded = doc.classList.contains('expanded');
+          docs.forEach(d => d.classList.remove('expanded'));
+          if (!wasExpanded) doc.classList.add('expanded');
+          // Sync sidebar nav
+          navItems.forEach(n => n.classList.toggle('active', n.dataset.target === doc.id));
+        });
+      });
+
+      // Sidebar nav click
+      navItems.forEach(nav => {
+        nav.addEventListener('click', () => {
+          const target = document.getElementById(nav.dataset.target);
+          if (!target) return;
+          docs.forEach(d => d.classList.remove('expanded'));
+          target.classList.add('expanded');
+          navItems.forEach(n => n.classList.remove('active'));
+          nav.classList.add('active');
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+    })();
+
+    // Scramble decode — Insight section (no background paths)
+    (function () {
+      const h2 = document.getElementById('insight-h2');
+      const section = document.getElementById('insight-section');
+      if (!h2 || !section) return;
+
+      const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&';
+      const line1 = "El mercado no derrota a los traders.";
+      const line2 = "Su comportamiento sí.";
+
+      function randomChar() {
+        return CHARS[Math.floor(Math.random() * CHARS.length)];
+      }
+
+      function buildScrambleHTML(text, isAccent) {
+        const cls = isAccent ? 'scramble-char locked-accent' : 'scramble-char';
+        return text.split('').map((ch, i) => {
+          if (ch === ' ') return '<span style="display:inline-block;width:0.3em"> </span>';
+          return `<span class="scramble-char" data-final="${ch}" data-accent="${isAccent ? 1 : 0}" data-idx="${i}">${randomChar()}</span>`;
+        }).join('');
+      }
+
+      h2.innerHTML =
+        `<span class="insight-line-wrap"><span class="insight-line-inner">${buildScrambleHTML(line1, false)}</span></span>` +
+        `<br>` +
+        `<em><span class="insight-line-wrap"><span class="insight-line-inner">${buildScrambleHTML(line2, true)}</span></span></em>`;
+
+      let triggered = false;
+
+      function runScramble() {
+        const allChars = h2.querySelectorAll('.scramble-char');
+        const total = allChars.length;
+        let scrambleFrame = 0;
+        const SCRAMBLE_FRAMES = 18; // frames of pure scramble before decode starts
+        const DECODE_SPEED = 2.2; // chars decoded per frame
+
+        // slide-in lines first
+        h2.querySelectorAll('.insight-line-inner').forEach((el, i) => {
+          setTimeout(() => el.classList.add('visible'), i * 160);
+        });
+
+        let decoded = 0;
+        let frame = 0;
+
+        function tick() {
+          frame++;
+
+          // Scramble phase: randomize all non-decoded chars
+          allChars.forEach((el, i) => {
+            if (i >= decoded) {
+              el.textContent = randomChar();
+              el.style.color = 'rgba(148,163,184,0.5)';
+              el.style.fontFamily = 'var(--mono)';
+            }
+          });
+
+          if (frame > SCRAMBLE_FRAMES) {
+            // Decode phase: lock chars from left to right
+            const target = Math.min(total, Math.floor((frame - SCRAMBLE_FRAMES) * DECODE_SPEED));
+            for (let i = decoded; i < target; i++) {
+              const el = allChars[i];
+              const final = el.getAttribute('data-final');
+              const isAccent = el.getAttribute('data-accent') === '1';
+              el.textContent = final;
+              el.style.fontFamily = 'inherit';
+              el.style.color = isAccent ? 'var(--green)' : 'var(--text-1)';
+            }
+            decoded = target;
+          }
+
+          if (decoded < total) {
+            requestAnimationFrame(tick);
+          }
+        }
+
+        requestAnimationFrame(tick);
+      }
+
+      new IntersectionObserver((entries, obs) => {
+        entries.forEach(e => {
+          if (e.isIntersecting && !triggered) {
+            triggered = true;
+            setTimeout(runScramble, 200);
+            obs.disconnect();
+          }
+        });
+      }, { threshold: 0.25 }).observe(section);
+    })();
+
+    // Meet Northpoint — mouse spotlight
+    (function () {
+      const section = document.querySelector('.meet');
+      const spot = document.getElementById('meetSpotlight');
+      if (!section || !spot) return;
+      section.addEventListener('mousemove', (e) => {
+        const rect = section.getBoundingClientRect();
+        spot.style.left = (e.clientX - rect.left) + 'px';
+        spot.style.top  = (e.clientY - rect.top)  + 'px';
+      });
+    })();
+
+    // SpecialText — scramble decode animation
+    (function () {
+      const RANDOM_CHARS = '_!X$0-+*#';
+      function getRandChar(prev) {
+        let c;
+        do { c = RANDOM_CHARS[Math.floor(Math.random() * RANDOM_CHARS.length)]; }
+        while (c === prev);
+        return c;
+      }
+
+      function runSpecialText(el) {
+        const text = el.dataset.text;
+        const speed = 20;
+        let phase = 'phase1';
+        let step = 0;
+
+        // Switch to monospace during animation, restore after
+        el.style.fontFamily = "'JetBrains Mono', monospace";
+
+        const interval = setInterval(() => {
+          const chars = [];
+
+          if (phase === 'phase1') {
+            const maxSteps = text.length * 2;
+            const len = Math.min(step + 1, text.length);
+            for (let i = 0; i < len; i++) chars.push(getRandChar(chars[i - 1]));
+            for (let i = len; i < text.length; i++) chars.push('\u00A0');
+            el.textContent = chars.join('');
+            if (step < maxSteps - 1) { step++; }
+            else { phase = 'phase2'; step = 0; }
+
+          } else {
+            const revealed = Math.floor(step / 2);
+            for (let i = 0; i < revealed && i < text.length; i++) chars.push(text[i]);
+            if (revealed < text.length) {
+              chars.push(step % 2 === 0 ? '_' : getRandChar());
+            }
+            while (chars.length < text.length) chars.push(getRandChar());
+            el.textContent = chars.join('');
+            if (step < text.length * 2 - 1) { step++; }
+            else {
+              el.textContent = text;
+              el.style.fontFamily = '';
+              clearInterval(interval);
+            }
+          }
+        }, speed);
+      }
+
+      const targets = document.querySelectorAll('.special-text');
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            obs.unobserve(e.target);
+            // Stagger line 2 by 400ms
+            const delay = e.target.id === 'special-line2' ? 400 : 0;
+            setTimeout(() => runSpecialText(e.target), delay);
+          }
+        });
+      }, { threshold: 0.5, rootMargin: '-60px' });
+
+      targets.forEach(t => obs.observe(t));
+    })();
+
+    // Mobile nav toggle (simple)
+    document.getElementById('mobileBtn').addEventListener('click', () => {
+      const navLinks = document.querySelector('.nav-links');
+      const isOpen = navLinks.style.display === 'flex';
+      navLinks.style.display = isOpen ? 'none' : 'flex';
+      navLinks.style.flexDirection = 'column';
+      navLinks.style.position = 'absolute';
+      navLinks.style.top = '64px';
+      navLinks.style.left = '0';
+      navLinks.style.right = '0';
+      navLinks.style.background = 'var(--bg)';
+      navLinks.style.borderBottom = '1px solid var(--border)';
+      navLinks.style.padding = '16px 24px';
+    });
+  </script>
+
+  <script type="module">
+    import createGlobe from "https://esm.sh/cobe@0.6.3";
+
+    const canvas = document.getElementById("globe-canvas");
+    if (!canvas) throw new Error("Globe canvas not found");
+
+    let phi = 0;
+    let width = 0;
+    let pointerDown = null;
+    let pointerDelta = 0;
+    let r = 0;
+
+    function resize() { width = canvas.offsetWidth; }
+    window.addEventListener("resize", resize);
+    resize();
+
+    const globe = createGlobe(canvas, {
+      devicePixelRatio: Math.min(window.devicePixelRatio, 2),
+      width: width * 2,
+      height: width * 2,
+      phi: 0,
+      theta: 0.3,
+      dark: 1,
+      diffuse: 1.4,
+      mapSamples: 24000,
+      mapBrightness: 3.2,
+      baseColor: [0.04, 0.07, 0.13],
+      markerColor: [52 / 255, 211 / 255, 153 / 255],
+      glowColor: [0.1, 0.38, 0.28],
+      markers: [
+        { location: [14.5995, 120.9842], size: 0.06 },
+        { location: [19.076,  72.8777],  size: 0.10 },
+        { location: [23.8103, 90.4125],  size: 0.06 },
+        { location: [30.0444, 31.2357],  size: 0.08 },
+        { location: [39.9042, 116.4074], size: 0.10 },
+        { location: [-23.5505, -46.6333], size: 0.11 },
+        { location: [19.4326, -99.1332], size: 0.12 },
+        { location: [40.7128, -74.006],  size: 0.11 },
+        { location: [34.6937, 135.5022], size: 0.07 },
+        { location: [41.0082, 28.9784],  size: 0.08 },
+        { location: [51.5074, -0.1278],  size: 0.09 },
+        { location: [48.8566,  2.3522],  size: 0.09 },
+        { location: [-33.8688, 151.2093], size: 0.08 },
+        { location: [1.3521, 103.8198],  size: 0.06 },
+        { location: [55.7558, 37.6173],  size: 0.08 },
+        { location: [4.711,  -74.0721],  size: 0.09 },
+        { location: [-12.0464, -77.0428], size: 0.08 },
+        { location: [-34.6037, -58.3816], size: 0.09 },
+        { location: [33.6844,  73.0479],  size: 0.06 },
+        { location: [6.5244,   3.3792],  size: 0.07 },
+      ],
+      onRender(state) {
+        if (pointerDown === null) phi += 0.004;
+        state.phi   = phi + r;
+        state.width  = width * 2;
+        state.height = width * 2;
+      },
+    });
+
+    setTimeout(() => { canvas.style.opacity = "1"; });
+
+    // Pointer / touch interaction
+    canvas.addEventListener("pointerdown", (e) => {
+      pointerDown = e.clientX - pointerDelta;
+      canvas.setPointerCapture(e.pointerId);
+    });
+    canvas.addEventListener("pointerup",  () => { pointerDown = null; });
+    canvas.addEventListener("pointerout", () => { pointerDown = null; });
+    canvas.addEventListener("pointermove", (e) => {
+      if (pointerDown === null) return;
+      const delta = e.clientX - pointerDown;
+      pointerDelta = delta;
+      r = delta / 200;
+    });
+    canvas.addEventListener("touchmove", (e) => {
+      if (pointerDown === null || !e.touches[0]) return;
+      const delta = e.touches[0].clientX - pointerDown;
+      pointerDelta = delta;
+      r = delta / 200;
+    }, { passive: true });
+  </script>
+
+  <!--
+  ✅ CLIENTE: Northpoint
+  ✅ ONBOARDING APLICADO: narrativa completa, 12 secciones en orden, copywriting en inglés,
+     paleta negro/azul oscuro/gris/verde suave, estilo Stripe/Apple/Linear, B2C + B2B pricing
+  ✅ VERSIÓN FINAL: v1 — single-file HTML completo
+
+  🎨 REMIX APLICADO:
+  - Estructura de 12 secciones exactamente en el orden del onboarding
+  - Identidad visual: minimalista, tecnológica, institucional (Stripe/Linear style)
+  - Paleta: #0A0A0F (negro), #0F1018 (azul oscuro), #94A3B8 (gris), #34D399 (verde suave)
+  - Tipografía: Inter (UI moderna) + JetBrains Mono (datos técnicos)
+  - Copywriting 100% del onboarding en inglés
+
+  🔧 MEJORAS vs. REFERENCIA:
+  - Dashboard mock interactivo en la sección Meet Northpoint
+  - Ticker animado en el Hero con datos en tiempo real
+  - SVG score rings para los 3 traders
+  - Tabla de ranking global con tiers visuales
+  - Comparison cards animadas para la sección de Reputación
+  - Scroll animations con IntersectionObserver
+  - Fully responsive 375px → 1440px
+  - Hover states y transiciones en todos los componentes
+
+  💡 SIGUIENTE ITERACIÓN RECOMENDADA:
+  - Agregar formulario de waitlist/registro real
+  - Animaciones de entrada más complejas (Framer Motion en React)
+  - Página de pricing dedicada con toggle anual/mensual
+  - Demo interactiva del dashboard
+  -->
+
+  <!-- ============================================================
+       JAPANESE CANDLESTICK BACKGROUNDS — SCRIPT
+  ============================================================ -->
+  <script>
+  (function () {
+    /* Deterministic LCG pseudo-random for consistent renders */
+    function mkRand(seed) {
+      let s = seed >>> 0;
+      return function () {
+        s = Math.imul(s, 1664525) + 1013904223 >>> 0;
+        return s / 0xffffffff;
+      };
+    }
+
+    /* Generate OHLC price series */
+    function genCandles(count, trend, seed) {
+      const rand = mkRand(seed);
+      const out  = [];
+      let price  = 100;
+
+      for (let i = 0; i < count; i++) {
+        const bullProb = trend === 'bull' ? 0.65 : trend === 'bear' ? 0.35 : 0.5;
+        const isBull   = rand() < bullProb;
+        const body     = price * (0.018 + rand() * 0.048);
+        const open     = price;
+        const close    = isBull ? price + body : price - body;
+        const wickUp   = price * (0.005 + rand() * 0.018);
+        const wickDn   = price * (0.005 + rand() * 0.018);
+        const high     = Math.max(open, close) + wickUp;
+        const low      = Math.min(open, close) - wickDn;
+        out.push({ open, close, high, low, bull: isBull });
+        const drift = trend === 'bull' ? 0.9 : trend === 'bear' ? -0.9 : (rand() - 0.5) * 1.8;
+        price = Math.max(50, close + drift);
+      }
+      return out;
+    }
+
+    /* Build SVG string with neon glow effect */
+    function buildSVG(candles, W, H, posCSS, opacity, dur, delay, uid) {
+      const pad = 10;
+      const slot = (W - pad * 2) / candles.length;
+      const cw   = slot * 0.55;
+
+      const highs = candles.map(c => c.high);
+      const lows  = candles.map(c => c.low);
+      const maxH  = Math.max(...highs);
+      const minL  = Math.min(...lows);
+      const range = maxH - minL || 1;
+
+      const toY = p => H - pad - ((p - minL) / range) * (H - pad * 2);
+
+      let s = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" `;
+      s += `style="position:absolute;${posCSS};opacity:${opacity};`;
+      s += `animation:candles-float ${dur}s cubic-bezier(0.42, 0, 0.58, 1) infinite ${delay}s;will-change:transform;">`;
+
+      /* Separate neon filters per color for accurate glow */
+      s += `<defs>`;
+      /* Green neon glow */
+      s += `<filter id="${uid}-g" x="-80%" y="-80%" width="260%" height="260%">`;
+      s += `<feGaussianBlur in="SourceGraphic" stdDeviation="6"  result="b1"/>`;
+      s += `<feGaussianBlur in="SourceGraphic" stdDeviation="12" result="b2"/>`;
+      s += `<feGaussianBlur in="SourceGraphic" stdDeviation="2"  result="b0"/>`;
+      s += `<feMerge><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="b0"/><feMergeNode in="SourceGraphic"/></feMerge>`;
+      s += `</filter>`;
+      /* Red neon glow */
+      s += `<filter id="${uid}-r" x="-80%" y="-80%" width="260%" height="260%">`;
+      s += `<feGaussianBlur in="SourceGraphic" stdDeviation="6"  result="b1"/>`;
+      s += `<feGaussianBlur in="SourceGraphic" stdDeviation="12" result="b2"/>`;
+      s += `<feGaussianBlur in="SourceGraphic" stdDeviation="2"  result="b0"/>`;
+      s += `<feMerge><feMergeNode in="b2"/><feMergeNode in="b1"/><feMergeNode in="b0"/><feMergeNode in="SourceGraphic"/></feMerge>`;
+      s += `</filter>`;
+      s += `</defs>`;
+
+      /* Render bulls and bears in separate groups so each gets the right filter */
+      ['bull','bear'].forEach(type => {
+        const col    = type === 'bull' ? '#34D399' : '#F87171';
+        const filt   = type === 'bull' ? `${uid}-g` : `${uid}-r`;
+        s += `<g filter="url(#${filt})">`;
+        candles.forEach((c, i) => {
+          if ((type === 'bull') !== c.bull) return;
+          const x   = pad + i * slot + (slot - cw) / 2;
+          const cx  = x + cw / 2;
+          const bT  = Math.min(toY(c.open), toY(c.close));
+          const bB  = Math.max(toY(c.open), toY(c.close));
+          const bH  = Math.max(2.5, bB - bT);
+          /* Wick — bright stroke + neon outline */
+          s += `<line x1="${cx.toFixed(1)}" y1="${toY(c.high).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${toY(c.low).toFixed(1)}" stroke="${col}" stroke-width="2" stroke-linecap="round"/>`;
+          /* Body — filled + neon stroke outline */
+          s += `<rect x="${x.toFixed(1)}" y="${bT.toFixed(1)}" width="${cw.toFixed(1)}" height="${bH.toFixed(1)}" fill="${col}" stroke="${col}" stroke-width="1" rx="1.5"/>`;
+        });
+        s += `</g>`;
+      });
+
+      s += `</svg>`;
+      return s;
+    }
+
+    function place(id, opts) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const { count=12, trend='bull', seed=42, W=520, H=220, pos='right:0;bottom:0', opacity=0.18, dur=10, delay=0 } = opts;
+      const uid = 'cv-' + id + '-' + seed;
+      el.insertAdjacentHTML('beforeend', buildSVG(genCandles(count, trend, seed), W, H, pos, opacity, dur, delay, uid));
+    }
+
+    /* ----------------------------------------------------------
+       Section placements
+    ---------------------------------------------------------- */
+
+    /* HERO — bullish uptrend, right side */
+    place('hero-candles', {
+      count:16, trend:'bull', seed:7,
+      W:660, H:290, pos:'right:-30px;bottom:10px',
+      opacity:0.22, dur:12, delay:0
+    });
+    /* HERO — small mixed cluster, left */
+    place('hero-candles', {
+      count:9, trend:'mixed', seed:21,
+      W:300, H:190, pos:'left:-15px;top:90px',
+      opacity:0.16, dur:14, delay:1.8
+    });
+
+    /* PROBLEM — bearish downtrend, right */
+    place('problem-candles', {
+      count:12, trend:'bear', seed:33,
+      W:500, H:210, pos:'right:-15px;top:30px',
+      opacity:0.20, dur:11, delay:0.6
+    });
+    /* PROBLEM — small bearish cluster, left bottom */
+    place('problem-candles', {
+      count:7, trend:'bear', seed:44,
+      W:260, H:160, pos:'left:-5px;bottom:20px',
+      opacity:0.15, dur:13, delay:2.5
+    });
+
+    /* REPUTATION — mixed volatility */
+    place('rep-candles', {
+      count:14, trend:'mixed', seed:55,
+      W:580, H:210, pos:'right:-20px;bottom:0px',
+      opacity:0.18, dur:10, delay:0
+    });
+    place('rep-candles', {
+      count:8, trend:'bull', seed:62,
+      W:280, H:160, pos:'left:-10px;top:40px',
+      opacity:0.15, dur:15, delay:1
+    });
+
+    /* CTA FINAL — live animated canvas candlesticks */
+    (function() {
+      const canvas = document.getElementById('cta-candles-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      const GREEN = '#34D399';
+      const RED   = '#F87171';
+      const CANDLE_W = 14;
+      const CANDLE_GAP = 8;
+      const SLOT = CANDLE_W + CANDLE_GAP;
+
+      let W, H, numCandles;
+      let candles = [];
+      let offset = 0;    // scroll offset in px
+      let lastTime = 0;
+
+      function rng(seed) {
+        let s = seed;
+        return function() {
+          s = (s * 16807 + 0) % 2147483647;
+          return (s - 1) / 2147483646;
+        };
+      }
+
+      function resize() {
+        const rect = canvas.parentElement.getBoundingClientRect();
+        W = canvas.width  = rect.width;
+        H = canvas.height = rect.height;
+        numCandles = Math.ceil(W / SLOT) + 4;
+        buildCandles();
+      }
+
+      function buildCandles() {
+        const r = rng(42);
+        let price = 100;
+        candles = [];
+        for (let i = 0; i < numCandles + 20; i++) {
+          const bull = r() > 0.45;
+          const body = price * (0.015 + r() * 0.055);
+          const open  = price;
+          const close = bull ? price + body : price - body;
+          const high  = Math.max(open, close) + price * (0.004 + r() * 0.014);
+          const low   = Math.min(open, close) - price * (0.004 + r() * 0.014);
+          price = Math.max(40, close + (bull ? 0.6 : -0.6) + (r() - 0.5) * 2.5);
+          candles.push({ open, close, high, low, bull,
+            phase: r() * Math.PI * 2, speed: 0.4 + r() * 0.8 });
+        }
+      }
+
+      function drawCandle(c, x, t) {
+        const highs = candles.map(c => c.high);
+        const lows  = candles.map(c => c.low);
+        const maxH  = Math.max(...highs);
+        const minL  = Math.min(...lows);
+        const range = maxH - minL || 1;
+
+        // animate price breathing
+        const breathAmt = range * 0.04 * Math.sin(t * c.speed + c.phase);
+        const open  = c.open  + breathAmt;
+        const close = c.close + breathAmt * 0.6;
+        const high  = c.high  + breathAmt;
+        const low   = c.low   + breathAmt * 0.4;
+
+        const pad = H * 0.12;
+        const toY = p => H - pad - ((p - minL) / range) * (H - pad * 2);
+
+        const yOpen  = toY(open);
+        const yClose = toY(close);
+        const yHigh  = toY(high);
+        const yLow   = toY(low);
+        const bodyTop = Math.min(yOpen, yClose);
+        const bodyH   = Math.max(2, Math.abs(yOpen - yClose));
+
+        const col = c.bull ? GREEN : RED;
+
+        ctx.shadowColor = col;
+        ctx.shadowBlur  = 10;
+        ctx.strokeStyle = col;
+        ctx.fillStyle   = col;
+        ctx.lineWidth   = 1.5;
+
+        // Wick
+        ctx.beginPath();
+        ctx.moveTo(x + CANDLE_W / 2, yHigh);
+        ctx.lineTo(x + CANDLE_W / 2, yLow);
+        ctx.stroke();
+
+        // Body
+        ctx.shadowBlur = 14;
+        ctx.beginPath();
+        ctx.roundRect(x, bodyTop, CANDLE_W, bodyH, 2);
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+      }
+
+      function draw(ts) {
+        const t = ts / 1000;
+        const dt = t - lastTime;
+        lastTime = t;
+
+        ctx.clearRect(0, 0, W, H);
+
+        // slow scroll
+        offset = (offset + dt * 18) % SLOT;
+
+        const startIdx = Math.floor(offset / SLOT);
+
+        for (let i = 0; i < numCandles + 2; i++) {
+          const ci = (startIdx + i) % candles.length;
+          const x  = i * SLOT - (offset % SLOT) - SLOT;
+          if (x > W + SLOT) continue;
+          drawCandle(candles[ci], x, t);
+        }
+
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', resize);
+      resize();
+      requestAnimationFrame(draw);
+    })();
+
+  })();
+  </script>
+</body>
+</html>
